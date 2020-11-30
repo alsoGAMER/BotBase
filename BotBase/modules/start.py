@@ -1,5 +1,5 @@
 """
-Copyright 2020 Nocturn9x & alsoGAMER
+Copyright 2020 Nocturn9x, alsoGAMER, CrisMystik
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,68 +17,82 @@ limitations under the License.
 import itertools
 import logging
 
-from pyrogram import Client, Filters, InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram import Client, filters
+from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from BotBase.modules.antiflood import BANNED_USERS
-from BotBase.config import GREET, BUTTONS, CACHE, bot, VERSION, user_banned, BACK_BUTTON, USER_LEFT_QUEUE, ADMINS, NAME, \
-    CREDITS
-from BotBase.database.query import get_users, set_user
+from BotBase.config import ADMINS, BACK_BUTTON, BUTTONS, CACHE, CREDITS, GREET, NAME, USER_LEFT_QUEUE, VERSION, bot, \
+    user_banned
+from BotBase.database.query import get_users, no_more_downloading, set_user
 from BotBase.methods import MethodWrapper
 
 wrapper = MethodWrapper(bot)
 
 
-@Client.on_message(Filters.command("start") & ~BANNED_USERS & Filters.private & ~user_banned())
-def start_handler(_, message):
+@Client.on_message(filters.command("start") & ~BANNED_USERS & filters.private & ~user_banned())
+async def start_handler(_, update):
     """Simply handles the /start command sending a pre-defined greeting
     and saving new users to the database"""
+    update_wrapper = MethodWrapper(update)
 
-    if message.from_user.first_name:
-        name = message.from_user.first_name
-    elif message.from_user.username:
-        name = message.from_user.username
+    if update.from_user.first_name:
+        name = update.from_user.first_name
+    elif update.from_user.username:
+        name = update.from_user.username
     else:
         name = "Anonymous"
-    if message.from_user.id not in itertools.chain(*get_users()):
-        logging.warning(f"New user detected ({message.from_user.id}), adding to database")
-        set_user(message.from_user.id, message.from_user.username.lower() if message.from_user.username else None)
+    if update.from_user.id not in itertools.chain(*get_users()):
+        logging.warning(f"New user detected ({update.from_user.id}), adding to database")
+        set_user(update.from_user.id, update.from_user.username.lower() if update.from_user.username else None)
     if GREET:
-        wrapper.send_message(message.from_user.id,
-                             GREET.format(mention=f"[{name}](tg://user?id={message.from_user.id})",
-                                          id=message.from_user.id,
-                                          username=message.from_user.username
-                                          ),
-                             reply_markup=BUTTONS
-                             )
+        if isinstance(update, Message):
+            await update_wrapper.reply(
+                text=GREET.format(
+                    mention=f"[{name}](tg://user?id={update.from_user.id})",
+                    id=update.from_user.id,
+                    username=update.from_user.username
+                ),
+                reply_markup=BUTTONS
+            )
+        elif isinstance(update, CallbackQuery):
+            if CACHE[update.from_user.id][0] == "AWAITING_ADMIN":
+                data = CACHE[update.from_user.id][-1]
+
+                if isinstance(data, list):
+                    for chatid, message_ids in data:
+                        await wrapper.delete_messages(chatid, message_ids)
+
+                for admin in ADMINS:
+                    await wrapper.send_message(
+                        chat_id=admin,
+                        text=USER_LEFT_QUEUE.format(user=f"[{name}]({NAME.format(update.from_user.id)})")
+                    )
+
+            await update_wrapper.edit_message_text(
+                text=GREET.format(
+                    mention=f"[{name}](tg://user?id={update.from_user.id})",
+                    id=update.from_user.id,
+                    username=update.from_user.username
+                ),
+                reply_markup=BUTTONS
+            )
+
+            no_more_downloading(update.from_user.id)
+            del CACHE[update.from_user.id]
+            await update_wrapper.answer()
 
 
-@Client.on_callback_query(Filters.regex("back_start") & ~BANNED_USERS)
-def back_start(_, query):
+@Client.on_callback_query(filters.regex("back_start") & ~BANNED_USERS)
+async def cb_start_handler(_, message):
+    await start_handler(_, message)
+
+
+@Client.on_callback_query(filters.regex("bot_info") & ~BANNED_USERS)
+async def bot_info(_, query):
     cb_wrapper = MethodWrapper(query)
-    if query.from_user.first_name:
-        name = query.from_user.first_name
-    elif query.from_user.username:
-        name = query.from_user.usernamenel
-    else:
-        name = "Anonymous"
-    if CACHE[query.from_user.id][0] == "AWAITING_ADMIN":
-        data = CACHE[query.from_user.id][-1]
-        if isinstance(data, list):
-            for chatid, message_ids in data:
-                wrapper.delete_messages(chatid, message_ids)
-        for admin in ADMINS:
-            wrapper.send_message(admin, USER_LEFT_QUEUE.format(user=f"[{name}]({NAME.format(query.from_user.id)})"))
-
-    cb_wrapper.edit_message_text(
-        GREET.format(mention=f"[{name}](tg://user?id={query.from_user.id})", id=query.from_user.id,
-                     username=query.from_user.username),
-        reply_markup=BUTTONS)
-    del CACHE[query.from_user.id]
-
-
-@Client.on_callback_query(Filters.regex("bot_info") & ~BANNED_USERS)
-def bot_info(_, query):
-    cb_wrapper = MethodWrapper(query)
-    buttons = InlineKeyboardMarkup([[InlineKeyboardButton(BACK_BUTTON, "back_start")]])
-    cb_wrapper.edit_message_text(CREDITS.format(VERSION=VERSION), disable_web_page_preview=True,
-                                 reply_markup=buttons)
+    await cb_wrapper.edit_message_text(
+        text=CREDITS.format(VERSION=VERSION),
+        disable_web_page_preview=True,
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton(BACK_BUTTON, "back_start")]])
+    )
+    await cb_wrapper.answer()

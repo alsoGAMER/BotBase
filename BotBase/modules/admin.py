@@ -1,5 +1,5 @@
 """
-Copyright 2020 Nocturn9x & alsoGAMER
+Copyright 2020 Nocturn9x, alsoGAMER, CrisMystik
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,280 +19,260 @@ import logging
 import random
 import re
 
-from pyrogram import Client, Filters
+from pyrogram import Client, filters
 
-from BotBase.modules.antiflood import BANNED_USERS
-from BotBase.config import ADMINS, USER_INFO, INVALID_SYNTAX, ERROR, NONNUMERIC_ID, USERS_COUNT, \
-    NO_PARAMETERS, ID_MISSING, GLOBAL_MESSAGE_STATS, NAME, WHISPER_FROM, USER_INFO_UPDATED, USER_INFO_UNCHANGED, \
-    USER_BANNED, USER_UNBANNED, CANNOT_BAN_ADMIN, USER_ALREADY_BANNED, USER_NOT_BANNED, YOU_ARE_BANNED, \
-    YOU_ARE_UNBANNED, \
-    MARKED_BUSY, UNMARKED_BUSY, CACHE, YES, NO, NAME_MISSING, bot, WHISPER_SUCCESSFUL, LEAVE_CURRENT_CHAT, \
-    QUEUE_LIST, CHATS_LIST
-from BotBase.database.query import get_user, get_users, update_name, ban_user, unban_user, get_user_by_name
+from BotBase.config import ADMINS, CACHE, CANNOT_BAN_ADMIN, CHATS_LIST, ERROR, \
+    GLOBAL_MESSAGE_STATS, ID_MISSING, INVALID_SYNTAX, LEAVE_CURRENT_CHAT, MARKED_BUSY, NAME, NAME_MISSING, NO, \
+    NON_NUMERIC_ID, NO_PARAMETERS, QUEUE_LIST, UNMARKED_BUSY, USERS_COUNT, USER_ALREADY_BANNED, \
+    USER_BANNED, USER_INFO, USER_INFO_UNCHANGED, USER_INFO_UPDATED, USER_NOT_BANNED, USER_UNBANNED, \
+    WHISPER_FROM, WHISPER_SUCCESSFUL, YES, YOU_ARE_BANNED, YOU_ARE_UNBANNED, bot
+from BotBase.database.query import ban_user, get_user, get_user_by_name, get_users, unban_user, update_name
 from BotBase.methods import MethodWrapper
+from BotBase.modules.antiflood import BANNED_USERS
 
-ADMINS_FILTER = Filters.user(list(ADMINS.keys()))
+ADMINS_FILTER = filters.user(list(ADMINS.keys()))
 wrapper = MethodWrapper(bot)
 
 
-@Client.on_message(Filters.command("getranduser") & ADMINS_FILTER & ~BANNED_USERS & ~Filters.edited)
-def get_random_user(_, message):
+def format_user(user):
+    tg_id, tg_uname, date, banned = user
+    return USER_INFO.format(
+        tg_id=tg_id,
+        tg_uname='@' + tg_uname if tg_uname else 'null',
+        date=date,
+        status=YES if banned else NO,
+        admin=YES if tg_id in ADMINS else NO
+    )
+
+
+@Client.on_message(filters.command("getranduser") & ADMINS_FILTER & ~BANNED_USERS & ~filters.edited)
+async def get_random_user(_, message):
     logging.warning(f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /getranduser")
     if len(message.command) > 1:
-        wrapper.send_message(message.chat.id, f"{NO_PARAMETERS.format(command='/getranduser')}")
+        await wrapper.send_message(message.chat.id, NO_PARAMETERS.format(command='/getranduser'))
     else:
         user = random.choice(get_users())
-        rowid, uid, uname, date, banned = get_user(*user)
-        admin = uid in ADMINS
-        text = USER_INFO.format(uid=uid,
-                                uname='@' + uname if uname else 'null',
-                                date=date,
-                                status=YES if banned else NO,
-                                admin=NO if not admin else YES)
-        wrapper.send_message(message.chat.id, text)
+        result = get_user(*user)
+        text = format_user(result)
+        await wrapper.send_message(message.chat.id, text)
 
 
-@Client.on_message(Filters.command("count") & ADMINS_FILTER & Filters.private & ~BANNED_USERS & ~Filters.edited)
-def count_users(_, message):
+@Client.on_message(filters.command("getuser") & ADMINS_FILTER & filters.private & ~BANNED_USERS & ~filters.edited)
+async def get_user_info(_, message):
+    if len(message.command) != 2:
+        return await wrapper.send_message(message.chat.id, INVALID_SYNTAX.format(correct='/getuser id/[@]username'))
+
+    if message.command[1].isdigit():
+        name = None
+        user = get_user(message.command[1])
+    else:
+        name = message.command[1].lstrip("@").lower()
+        user = get_user_by_name(name)
+
+    if user:
+        logging.warning(
+            f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /getuser {message.command[1]}")
+        result = user
+        text = format_user(result)
+        await wrapper.send_message(message.chat.id, text)
+    else:
+        if name:
+            await wrapper.send_message(message.chat.id, f"{ERROR}: {NAME_MISSING.format(tg_uname=message.command[1])}")
+        else:
+            await wrapper.send_message(message.chat.id, f"{ERROR}: {ID_MISSING.format(tg_id=message.command[1])}")
+
+
+@Client.on_message(filters.command("count") & ADMINS_FILTER & filters.private & ~BANNED_USERS & ~filters.edited)
+async def count_users(_, message):
     if len(message.command) > 1:
-        wrapper.send_message(message.chat.id, f"{NO_PARAMETERS.format(command='/getranduser')}")
+        await wrapper.send_message(message.chat.id, NO_PARAMETERS.format(command='/count'))
     else:
         logging.warning(f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /count")
         count = len(get_users())
-        wrapper.send_message(message.chat.id, USERS_COUNT.format(count=count))
+        await wrapper.send_message(message.chat.id, USERS_COUNT.format(count=count))
 
 
-@Client.on_message(Filters.command("getuser") & ADMINS_FILTER & Filters.private & ~BANNED_USERS & ~Filters.edited)
-def get_user_info(_, message):
-    if len(message.command) == 2:
-        if message.command[1].isdigit():
-            user = get_user(message.command[1])
-            if user:
-                logging.warning(
-                    f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /getuser {message.command[1]}")
-                _, uid, uname, date, banned = user
-                admin = uid in ADMINS
-                text = USER_INFO.format(uid=uid,
-                                        uname='@' + uname if uname else 'null',
-                                        date=date,
-                                        status=YES if banned else NO,
-                                        admin=NO if not admin else YES)
-                wrapper.send_message(message.chat.id, text)
-            else:
-                wrapper.send_message(message.chat.id, f"{ERROR}: {ID_MISSING.format(uid=message.command[1])}")
-        else:
-            wrapper.send_message(message.chat.id, f"{ERROR}: {NONNUMERIC_ID}")
-    else:
-        wrapper.send_message(message.chat.id, f"{INVALID_SYNTAX.format(correct='/getuser id')}")
-
-
-@Client.on_message(Filters.command("userbyname") & ADMINS_FILTER & Filters.private & ~BANNED_USERS & ~Filters.edited)
-def get_user_by_uname(_, message):
-    if len(message.command) == 2:
-        name = message.command[1].lstrip("@").lower()
-        user = get_user_by_name(name)
-        if user:
-            logging.warning(
-                f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /userbyname {message.command[1]}")
-            _, uid, uname, date, banned = user
-            admin = uid in ADMINS
-            text = USER_INFO.format(uid=uid,
-                                    uname='@' + uname if uname else 'null',
-                                    date=date,
-                                    status=YES if banned else NO,
-                                    admin=NO if not admin else YES)
-            wrapper.send_message(message.chat.id, text)
-        else:
-            wrapper.send_message(message.chat.id, f"{ERROR}: {NAME_MISSING.format(uname=message.command[1])}")
-    else:
-        wrapper.send_message(message.chat.id, f"{INVALID_SYNTAX.format(correct='/userbyname [@]username')}")
-
-
-@Client.on_message(Filters.command("global") & ADMINS_FILTER & Filters.private & ~BANNED_USERS & ~Filters.edited)
-def global_message(_, message):
+@Client.on_message(filters.command("global") & ADMINS_FILTER & filters.private & ~BANNED_USERS & ~filters.edited)
+async def global_message(_, message):
     if len(message.command) > 1:
         msg = message.text.html[7:]
         logging.warning(
-            f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent the following global message: {msg}")
+            f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent the following global message: {msg}"
+        )
+
         missed = 0
         count = 0
-        for uid in itertools.chain(*get_users()):
+
+        for tg_id in itertools.chain(*get_users()):
             count += 1
-            result = wrapper.send_message(uid, msg)
+            result = await wrapper.send_message(tg_id, msg)
+
             if isinstance(result, Exception):
                 logging.error(
-                    f"Could not deliver the global message to {uid} because of {type(result).__name__}: {result}")
+                    f"Could not deliver the global message to {tg_id} because of {type(result).__name__}: {result}"
+                )
                 missed += 1
+
         logging.warning(f"{count - missed}/{count} global messages were successfully delivered")
-        wrapper.send_message(message.chat.id,
-                             GLOBAL_MESSAGE_STATS.format(count=count, success=(count - missed), msg=msg))
+        await wrapper.send_message(
+            message.chat.id,
+            GLOBAL_MESSAGE_STATS.format(count=count, success=(count - missed), msg=msg)
+        )
     else:
-        wrapper.send_message(message.chat.id,
-                             f"{INVALID_SYNTAX.format(correct='/global message')}\n<b>HTML and Markdown styling supported</b>")
+        await wrapper.send_message(
+            message.chat.id,
+            f"{INVALID_SYNTAX.format(correct='/global message')}\n<b>HTML and Markdown styling supported</b>"
+        )
 
 
-@Client.on_message(Filters.command("whisper") & ADMINS_FILTER & Filters.private & ~BANNED_USERS & ~Filters.edited)
-def whisper(_, message):
-    if len(message.command) > 2:
-        msg = message.text.html[9:]
-        logging.warning(f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent {message.text.html}")
-        if message.command[1].isdigit():
-            msg = msg[re.search(message.command[1], msg).end():]
-            uid = int(message.command[1])
-            if uid in itertools.chain(*get_users()):
-                result = wrapper.send_message(uid, WHISPER_FROM.format(
-                    admin=f"[{ADMINS[message.from_user.id]}]({NAME.format(message.from_user.id)})",
-                    msg=msg)
-                                              )
-                if isinstance(result, Exception):
-                    logging.error(
-                        f"Could not whisper to {uid} because of {type(result).__name__}: {result}")
-                    wrapper.send_message(message.chat.id, f"{ERROR}: {type(result).__name__} -> {result}")
-                else:
-                    wrapper.send_message(message.chat.id, WHISPER_SUCCESSFUL)
-            else:
-                wrapper.send_message(message.chat.id, f"{ERROR}: {ID_MISSING.format(uid=uid)}")
+@Client.on_message(filters.command("whisper") & ADMINS_FILTER & filters.private & ~BANNED_USERS & ~filters.edited)
+async def whisper(_, message):
+    if len(message.command) < 2:
+        return await wrapper.send_message(
+            message.chat.id,
+            f"{INVALID_SYNTAX.format(correct='/whisper ID')}\n<b>HTML and Markdown styling supported</b>"
+        )
+
+    if not message.command[1].isdigit():
+        return await wrapper.send_message(message.chat.id, f"{ERROR}: {NON_NUMERIC_ID}")
+
+    logging.warning(f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent {message.text.html}")
+
+    tg_id = int(message.command[1])
+    msg = message.text.html[9:]
+    msg = msg[re.search(message.command[1], msg).end():]
+
+    if tg_id not in itertools.chain(*get_users()):
+        return await wrapper.send_message(message.chat.id, f"{ERROR}: {ID_MISSING.format(tg_id=tg_id)}")
+
+    result = await wrapper.send_message(
+        tg_id,
+        WHISPER_FROM.format(
+            admin=f"[{ADMINS[message.from_user.id]}]({NAME.format(message.from_user.id)})",
+            msg=msg
+        )
+    )
+
+    if isinstance(result, Exception):
+        logging.error(f"Could not whisper to {tg_id} because of {type(result).__name__}: {result}")
+        await wrapper.send_message(message.chat.id, f"{ERROR}: {type(result).__name__} -> {result}")
+    else:
+        await wrapper.send_message(message.chat.id, WHISPER_SUCCESSFUL)
+
+
+@Client.on_message(filters.command("update") & ADMINS_FILTER & filters.private & ~BANNED_USERS & ~filters.edited)
+async def update(_, message):
+    if len(message.command) != 2:
+        return await wrapper.send_message(message.chat.id, INVALID_SYNTAX.format(correct='/update ID'))
+
+    if not message.command[1].isdigit():
+        return await wrapper.send_message(message.chat.id, f"{ERROR}: {NON_NUMERIC_ID}")
+
+    user = get_user(message.command[1])
+    if user:
+        logging.warning(f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /update {message.command[1]}")
+
+        tg_id, tg_uname = user[:2]
+        new = await wrapper.get_users(tg_id)
+
+        if isinstance(new, Exception):
+            logging.error(f"An error has occurred when calling get_users({tg_id}), {type(new).__name__}: {new}")
+            await wrapper.send_message(message.chat.id, f"{ERROR}: {type(new).__name__} -> {new}")
         else:
-            wrapper.send_message(message.chat.id, f"{ERROR}: {NONNUMERIC_ID}")
-    else:
-        wrapper.send_message(message.chat.id,
-                             f"{INVALID_SYNTAX.format(correct='/whisper ID')}\n<b>HTML and Markdown styling supported</b>")
-
-
-@Client.on_message(Filters.command("update") & ADMINS_FILTER & Filters.private & ~BANNED_USERS & ~Filters.edited)
-def update(_, message):
-    if len(message.command) == 2:
-        if message.command[1].isdigit():
-            user = get_user(message.command[1])
-            if user:
-                logging.warning(
-                    f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /update {message.command[1]}")
-                _, uid, uname, date, banned = user
-                new = wrapper.get_users(uid)
-                if isinstance(new, Exception):
-                    logging.error(f"An error has occurred when calling get_users({uid}), {type(new).__name__}: {new}")
-                    wrapper.send_message(message.chat.id, f"{ERROR}: {type(new).__name__} -> {new}")
-                else:
-                    if new.username is None:
-                        new.username = "null"
-                    if new.username != uname:
-                        update_name(uid, new.username)
-                        wrapper.send_message(message.chat.id, USER_INFO_UPDATED)
-                    else:
-                        wrapper.send_message(message.chat.id, USER_INFO_UNCHANGED)
+            if new.username is None:
+                new.username = "null"
+            if new.username != tg_uname:
+                update_name(tg_id, new.username)
+                await wrapper.send_message(message.chat.id, USER_INFO_UPDATED)
             else:
-                wrapper.send_message(message.chat.id, f"{ERROR}: {ID_MISSING.format(uid=message.command[1])}")
-        else:
-            wrapper.send_message(message.chat.id, f"{ERROR}: {NONNUMERIC_ID}")
+                await wrapper.send_message(message.chat.id, USER_INFO_UNCHANGED)
     else:
-        wrapper.send_message(message.chat.id, f"{INVALID_SYNTAX.format(correct='/update ID')}")
+        await wrapper.send_message(message.chat.id, f"{ERROR}: {ID_MISSING.format(tg_id=message.command[1])}")
 
 
-@Client.on_message(Filters.command("ban") & ADMINS_FILTER & Filters.private & ~BANNED_USERS & ~Filters.edited)
-def ban(_, message):
-    if len(message.command) == 2:
-        if message.command[1].isdigit():
-            if int(message.command[1]) in ADMINS:
-                wrapper.send_message(message.chat.id, CANNOT_BAN_ADMIN)
+@Client.on_message(filters.command(["ban", "unban"]) & ADMINS_FILTER & filters.private & ~BANNED_USERS &
+                   ~filters.edited)
+async def ban(_, message):
+    cmd = message.command[0]
+    condition = {"ban": False, "unban": True}.get(cmd)
+
+    if len(message.command) != 2:
+        return await wrapper.send_message(message.chat.id, INVALID_SYNTAX.format(correct=f'/{cmd} ID'))
+
+    if not message.command[1].isdigit():
+        return await wrapper.send_message(message.chat.id, f"{ERROR}: {NON_NUMERIC_ID}")
+
+    if int(message.command[1]) in ADMINS:
+        return await wrapper.send_message(message.chat.id, CANNOT_BAN_ADMIN)
+
+    user = get_user(message.command[1])
+    if user:
+        if bool(user[3]) is condition:
+            logging.warning(f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /{cmd} {message.command[1]}")
+
+            tg_id = user[0]
+            if condition:
+                res = unban_user(tg_id)
             else:
-                user = get_user(message.command[1])
-                if user:
-                    if not user[-1]:
-                        logging.warning(
-                            f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /ban {message.command[1]}")
-                        _, uid, uname, date, banned = user
-                        res = ban_user(int(message.command[1]))
-                        if isinstance(res, Exception):
-                            logging.error(
-                                f"An error has occurred when calling ban_user({uid}), {type(res).__name__}: {res}")
-                            wrapper.send_message(message.chat.id, f"{ERROR}: {type(res).__name__} -> {res}")
-                        else:
-                            wrapper.send_message(message.chat.id, USER_BANNED)
-                            wrapper.send_message(uid, YOU_ARE_BANNED)
-                            BANNED_USERS.add(uid)
-                    else:
-                        wrapper.send_message(message.chat.id, USER_ALREADY_BANNED)
-                else:
-                    wrapper.send_message(message.chat.id, f"{ERROR}: {ID_MISSING.format(uid=message.command[1])}")
-        else:
-            wrapper.send_message(message.chat.id, f"{ERROR}: {NONNUMERIC_ID}")
-    else:
-        wrapper.send_message(message.chat.id, f"{INVALID_SYNTAX.format(correct='/ban ID')}")
+                res = ban_user(tg_id)
 
-
-@Client.on_message(Filters.command("unban") & ADMINS_FILTER & Filters.private & ~BANNED_USERS & ~Filters.edited)
-def unban(_, message):
-    if len(message.command) == 2:
-        if message.command[1].isdigit():
-            if int(message.command[1]) in ADMINS:
-                wrapper.send_message(message.chat.id, CANNOT_BAN_ADMIN)
+            if isinstance(res, Exception):
+                logging.error(f"An error has occurred when calling {cmd}_user({tg_id}), {type(res).__name__}: {res}")
+                await wrapper.send_message(message.chat.id, f"{ERROR}: {type(res).__name__} -> {res}")
             else:
-                user = get_user(message.command[1])
-                if user:
-                    if user[-1]:
-                        logging.warning(
-                            f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /unban {message.command[1]}")
-                        _, uid, uname, date, banned = user
-                        res = unban_user(int(message.command[1]))
-                        if isinstance(res, Exception):
-                            logging.error(
-                                f"An error has occurred when calling unban_user({uid}), {type(res).__name__}: {res}")
-                            wrapper.send_message(message.chat.id, f"{ERROR}: {type(res).__name__} -> {res}")
-                        else:
-                            wrapper.send_message(message.chat.id, USER_UNBANNED)
-                            if uid in BANNED_USERS:
-                                BANNED_USERS.remove(uid)
-                            wrapper.send_message(uid, YOU_ARE_UNBANNED)
-                    else:
-                        wrapper.send_message(message.chat.id, USER_NOT_BANNED)
+                if condition and tg_id in BANNED_USERS:
+                    BANNED_USERS.remove(tg_id)
                 else:
-                    wrapper.send_message(message.chat.id, f"{ERROR}: {ID_MISSING.format(uid=message.command[1])}")
+                    BANNED_USERS.add(tg_id)
+
+                await wrapper.send_message(message.chat.id, USER_UNBANNED if condition else USER_BANNED)
+                await wrapper.send_message(tg_id, YOU_ARE_UNBANNED if condition else YOU_ARE_BANNED)
         else:
-            wrapper.send_message(message.chat.id, f"{ERROR}: {NONNUMERIC_ID}")
+            await wrapper.send_message(message.chat.id, USER_NOT_BANNED if condition else USER_ALREADY_BANNED)
     else:
-        wrapper.send_message(message.chat.id, f"{INVALID_SYNTAX.format(correct='/unban ID')}")
+        await wrapper.send_message(message.chat.id, f"{ERROR}: {ID_MISSING.format(uid=message.command[1])}")
 
 
-@Client.on_message(Filters.command("busy") & ADMINS_FILTER & Filters.private & ~BANNED_USERS & ~Filters.edited)
-def busy(_, message):
+@Client.on_message(filters.command("busy") & ADMINS_FILTER & filters.private & ~BANNED_USERS & ~filters.edited)
+async def busy(_, message):
+    if len(message.command) > 1:
+        return await wrapper.send_message(message.chat.id, f"{NO_PARAMETERS.format(command='/busy')}")
+
     logging.warning(f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /busy")
-    if len(message.command) > 1:
-        wrapper.send_message(message.chat.id, f"{NO_PARAMETERS.format(command='/busy')}")
+    if CACHE[message.from_user.id][0] == "IN_CHAT" and CACHE[message.from_user.id][1] != 1234567:
+        await wrapper.send_message(message.from_user.id, LEAVE_CURRENT_CHAT)
+    elif CACHE[message.from_user.id][0] == "none":
+        await wrapper.send_message(message.chat.id, MARKED_BUSY)
+        CACHE[message.from_user.id] = ["IN_CHAT", 1234567]
     else:
-        if CACHE[message.from_user.id][0] == "IN_CHAT" and CACHE[message.from_user.id][1] != 1234567:
-            wrapper.send_message(message.from_user.id, LEAVE_CURRENT_CHAT)
-        elif CACHE[message.from_user.id][0] == "none":
-            wrapper.send_message(message.chat.id, MARKED_BUSY)
-            CACHE[message.from_user.id] = ["IN_CHAT", 1234567]
-        else:
-            if message.from_user.id in CACHE:
-                del CACHE[message.from_user.id]
-            wrapper.send_message(message.chat.id, UNMARKED_BUSY)
+        if message.from_user.id in CACHE:
+            del CACHE[message.from_user.id]
+        await wrapper.send_message(message.chat.id, UNMARKED_BUSY)
 
 
-@Client.on_message(Filters.command("chats") & ADMINS_FILTER & Filters.private & ~BANNED_USERS & ~Filters.edited)
-def chats(_, message):
+@Client.on_message(filters.command("chats") & ADMINS_FILTER & filters.private & ~BANNED_USERS & ~filters.edited)
+async def chats(_, message):
+    if len(message.command) > 1:
+        return await wrapper.send_message(message.chat.id, f"{NO_PARAMETERS.format(command='/chats')}")
+
     logging.warning(f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /chats")
+    text = ""
+    for user in CACHE:
+        if CACHE[user][0] == "IN_CHAT" and user not in ADMINS:
+            admin_id = CACHE[user][1]
+            admin_name = ADMINS[admin_id]
+            text += f"- 👤 [User]({NAME.format(user)}) -> 👨‍💻 [{admin_name}]({NAME.format(admin_id)})\n"
+    await wrapper.send_message(message.chat.id, CHATS_LIST.format(chats=text))
+
+
+@Client.on_message(filters.command("queue") & ADMINS_FILTER & filters.private & ~BANNED_USERS & ~filters.edited)
+async def queue(_, message):
     if len(message.command) > 1:
-        wrapper.send_message(message.chat.id, f"{NO_PARAMETERS.format(command='/chats')}")
-    else:
-        text = ""
-        for user in CACHE:
-            if CACHE[user][0] == "IN_CHAT" and user not in ADMINS:
-                admin_id = CACHE[user][1]
-                admin_name = ADMINS[admin_id]
-                text += f"- 👤 [User]({NAME.format(user)}) -> 👨‍💻 [{admin_name}]({NAME.format(admin_id)})\n"
-        wrapper.send_message(message.chat.id, CHATS_LIST.format(chats=text))
+        return await wrapper.send_message(message.chat.id, f"{NO_PARAMETERS.format(command='/queue')}")
 
-
-@Client.on_message(Filters.command("queue") & ADMINS_FILTER & Filters.private & ~BANNED_USERS & ~Filters.edited)
-def queue(_, message):
     logging.warning(f"{ADMINS[message.from_user.id]} [{message.from_user.id}] sent /queue")
-    if len(message.command) > 1:
-        wrapper.send_message(message.chat.id, f"{NO_PARAMETERS.format(command='/queue')}")
-    else:
-        text = ""
-        for user in CACHE:
-            if CACHE[user][0] == "AWAITING_ADMIN":
-                text += f"- 👤 [User]({NAME.format(user)})\n"
-        wrapper.send_message(message.chat.id, QUEUE_LIST.format(queue=text))
+    text = ""
+    for user in CACHE:
+        if CACHE[user][0] == "AWAITING_ADMIN":
+            text += f"- 👤 [User]({NAME.format(user)})\n"
+    await wrapper.send_message(message.chat.id, QUEUE_LIST.format(queue=text))

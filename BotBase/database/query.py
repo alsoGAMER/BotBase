@@ -1,5 +1,5 @@
 """
-Copyright 2020 Nocturn9x & alsoGAMER
+Copyright 2020 Nocturn9x, alsoGAMER, CrisMystik
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@ limitations under the License.
 """
 
 import sqlite3.dbapi2 as sqlite3
-from BotBase.config import DB_GET_USERS, DB_GET_USER, DB_PATH, DB_SET_USER, DB_UPDATE_NAME, DB_BAN_USER, DB_UNBAN_USER, DB_GET_USER_BY_NAME
+from BotBase.config import DB_GET_USERS, DB_GET_USER, DB_PATH, DB_SET_USER, DB_UPDATE_NAME, DB_BAN_USER, DB_UNBAN_USER, \
+    DB_GET_USER_BY_NAME, DB_CHECK_BANNED
 import logging
 import time
 import os
@@ -48,14 +49,14 @@ def get_user(tg_id: int):
         try:
             with database:
                 cursor = database.cursor()
-                query = cursor.execute(DB_GET_USER, (tg_id,))
+                query = cursor.execute(DB_GET_USER, (tg_id, ))
                 return query.fetchone()
         except sqlite3.Error as query_error:
             logging.error(f"An error has occurred while executing DB_GET_USER query: {query_error}")
             return query_error
 
 
-def get_user_by_name(uname: str):
+def get_user_by_name(tg_uname: str):
     try:
         database = sqlite3.connect(DB_PATH)
     except sqlite3.Error as connection_error:
@@ -64,7 +65,7 @@ def get_user_by_name(uname: str):
         try:
             with database:
                 cursor = database.cursor()
-                query = cursor.execute(DB_GET_USER_BY_NAME, (uname,))
+                query = cursor.execute(DB_GET_USER_BY_NAME, (tg_uname, ))
                 return query.fetchone()
         except sqlite3.Error as query_error:
             logging.error(f"An error has occurred while executing DB_GET_USER_BY_NAME query: {query_error}")
@@ -102,7 +103,7 @@ def get_users():
             return query_error
 
 
-def set_user(tg_id: int, uname: str):
+def set_user(tg_id: int, tg_uname: str):
     try:
         database = sqlite3.connect(DB_PATH)
     except sqlite3.Error as connection_error:
@@ -110,7 +111,7 @@ def set_user(tg_id: int, uname: str):
     else:
         try:
             with database:
-                database.execute(DB_SET_USER, (None, tg_id, uname, time.strftime("%d/%m/%Y %T %p"), 0))
+                database.execute(DB_SET_USER, (tg_id, tg_uname, time.strftime("%d/%m/%Y %T %p"), 0, 0, 0))
             return True
         except sqlite3.Error as query_error:
             logging.error(f"An error has occurred while executing DB_SET_USER query: {query_error}")
@@ -144,4 +145,19 @@ def unban_user(tg_id: int):
             return True
         except sqlite3.Error as query_error:
             logging.error(f"An error has occurred while executing DB_UNBAN_USER query: {query_error}")
+            return query_error
+
+
+def check_banned(tg_id: int):
+    try:
+        database = sqlite3.connect(DB_PATH)
+    except sqlite3.Error as connection_error:
+        logging.error(f"An error has occurred while connecting to database: {connection_error}")
+    else:
+        try:
+            with database:
+                query = database.execute(DB_CHECK_BANNED, (tg_id, ))
+                return query.fetchone()
+        except sqlite3.Error as query_error:
+            logging.error(f"An error has occurred while executing DB_CHECK_BANNED query: {query_error}")
             return query_error

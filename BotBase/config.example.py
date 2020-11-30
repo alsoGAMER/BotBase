@@ -1,5 +1,5 @@
 """
-Copyright 2020 Nocturn9x & alsoGAMER
+Copyright 2020 Nocturn9x, alsoGAMER, CrisMystik
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,49 +18,63 @@ import os
 import re
 from collections import defaultdict
 
-from pyrogram import Filters, InlineKeyboardMarkup, InlineKeyboardButton, Client
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # Antiflood module configuration
-# The antiflood works by accumulating up to MAX_UPDATE_THRESHOLD updates (user-wise)
-# and when that limit is reached, perform some checks to tell if the user is actually flooding
+# The antiflood works by accumulating up to MAX_UPDATE_THRESHOLD updates (user-wise) and
+# when that limit is reached, perform some checks to tell if the user is actually flooding
 
-
-BAN_TIME = 300  # The amount of seconds the user will be banned
-MAX_UPDATE_THRESHOLD = 7  # How many updates to accumulate before starting to count
-PRIVATE_ONLY = True  # If True, the antiflood will only work in private chats
-# The percentage (from 0 to 100) of updates that when below ANTIFLOOD_SENSIBILITY will trigger the anti flood
-
-# Example, if FLOOD_PERCENTAGE == 75, if at least 75% of the messages from a user are marked as flood it will be blocked
+BAN_TIME = 300
+# The amount of seconds the user will be banned
+MAX_UPDATE_THRESHOLD = 7
+# How many updates to accumulate before starting to count
+PRIVATE_ONLY = True
+# If True, the antiflood will only work in private chats
 FLOOD_PERCENTAGE = 75
+# The percentage (from 0 to 100) of updates that when below ANTIFLOOD_SENSIBILITY will trigger the anti flood
+# Example, if FLOOD_PERCENTAGE == 75, if at least 75% of the messages from a user are marked as flood it will be blocked
+ANTIFLOOD_SENSIBILITY = 1
 # The minimum amount of seconds between updates. Updates that are sent faster than this limit will trigger the antiflood
 # This should not be below 1, but you can experiment if you feel bold enough
-ANTIFLOOD_SENSIBILITY = 1
+FLOOD_NOTICE = f"🤙 <b>Hey buddy!</b>\n🕐 Relax! You have been banned for {BAN_TIME / 60:.1f} minutes"
 # If you want the user to be notified of being flood-blocked, set this to the desired message, False to disable
-FLOOD_NOTICE = f"🤙 <b>Hey amico!</b>\n🕐 Rilassati! Sei stato bloccato per {BAN_TIME / 60:.1f} minuti"
-FLOOD_CLEARED = "♻️ Tabella antiflood svuotata"
-FLOOD_USER_CLEARED = "♻️ Tabella antiflood ripulita per <code>{user}</code>"
-DELETE_MESSAGES = True  # Set this to false if you do not want the messages to be deleted after flood is detected
+FLOOD_CLEARED = "♻️ Antiflood table cleaned up"
+FLOOD_USER_CLEARED = "♻️ Antiflood table for<code>{user}</code> cleaned up"
+DELETE_MESSAGES = True
+# Set this to false if you do not want the messages to be deleted after flood is detected
 
 # Various options and global variables
 
-CACHE = defaultdict(lambda: ["none", 0])  # Global cache. DO NOT TOUCH IT, really just don't
-VERSION = "2.0A"  # These will be shown in the 'Credits' section
-RELEASE_DATE = "17/11/2020"
-CREDITS = "‍💻 <b>Bot sviluppato</b> da @alsoGAMER & @Nocturn9x in <b>Python3.8</b> e <b>Pyrogram 0.18.0</b>" \
-          f"\n⚙️ <b>Versione</b>: <code>{VERSION}</code>\n🗓 <b>Data di rilascio</b>: <code>{RELEASE_DATE}</code>"
+CACHE = defaultdict(lambda: ["none", 0])
+# Global cache. DO NOT TOUCH IT, really just don't
+VERSION = "2.0a"
+RELEASE_DATE = "30/11/2020"
+CREDITS = "‍💻 <b>Bot developed by</b> @yourusernamehere in <b>Python3.x</b> and <b>BotBase 2.0</b>" \
+          f"\n⚙️ <b>Version</b>: <code>{VERSION}</code>\n🗓 <b>Release date</b>: <code>{RELEASE_DATE}</code>"
+# These will be shown in the 'Credits' section
 
 # Telegram client configuration
 
-WORKERS_NUM = 15  # The number of worker threads that pyrogram will spawn at startup.
+WORKERS_NUM = 15
+# The number of worker threads that pyrogram will spawn at the startup.
 # 10 workers means that the bot will process up to 10 users at the same time and then block until one worker has done
-BOT_TOKEN = "TOKEN HERE"  # Get it with t.me/BotFather
-SESSION_NAME = "BotBase"  # The name of the Telegram Session that the bot will have, will be visible from Telegram
-PLUGINS_ROOT = {"root": f"BotBase/modules"}  # Do not change this unless you know what you're doing
-API_ID = 1234569  # Get it at https://my.telegram.org/apps
-API_HASH = "abcdef1234567"  # Same as above
-DEVICE_MODEL = "BotBase"  # Name of the device shown in the sessions list - useless for a Bot
-SYSTEM_VERSION = "2.0A"  # Host OS version - can be the same as VERSION
-LANG_CODE = "en_US"  # Session lang_code
+BOT_TOKEN = "BOT_TOKEN_HERE"
+# Get it with t.me/BotFather
+SESSION_NAME = "BotBase"
+# The name of the Telegram Session that the bot will have, will be visible from Telegram
+PLUGINS_ROOT = {"root": f"BotBase/modules"}
+# Do not change this unless you know what you're doing
+API_ID = 123456
+# Get it at https://my.telegram.org/apps
+API_HASH = "API_HASH_HERE"
+# Same as above
+DEVICE_MODEL = "BotBase"
+# Name of the device shown in the sessions list - useless for a Bot
+SYSTEM_VERSION = "2.0a"
+# Host OS version, can be the same as VERSION - also useless for a Bot
+LANG_CODE = "en_US"
+# Session lang_code
 
 # Logging configuration
 # To know more about what these options mean, check https://docs.python.org/3/library/logging.html
@@ -76,12 +90,18 @@ bot = Client(api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN, plugins=PLUG
 # Start module
 # P.S.: {mention} in the GREET message will be replaced with a mention to the user, same applies for {id} and {username}
 
-GREET = """Ciao {mention} [<code>{id}</code>]!"""  # The message that will be sent as a reply to the /start command. If this string is empty the bot will not reply
-SUPPORT_BUTTON = "💭 Avvia Chat"  # The text for the button that triggers the live chat
-BACK_BUTTON = "🔙 Indietro"
-CREDITS_BUTTON = "ℹ Crediti"  # The text for the 'Credits' button
-BUTTONS = InlineKeyboardMarkup([  # This keyboard will be sent along with GREET, feel free to add or remove buttons
-    [InlineKeyboardButton(SUPPORT_BUTTON, "begin_chat"), InlineKeyboardButton(CREDITS_BUTTON, "bot_info")]])
+GREET = """👋 <b>Hi</b> {mention} and <b>welcome</b> to <b>BotBase</b>."""
+# The message that will be sent as a reply to the /start command. If this string is empty the bot will not reply.
+SUPPORT_BUTTON = "💭 Start Chat"
+# The text for the button that triggers the live chat
+BACK_BUTTON = "🔙 Back"
+# The text for the 'Back' button
+CREDITS_BUTTON = "ℹ Credits"
+# The text for the 'Credits' button
+BUTTONS = InlineKeyboardMarkup([
+    [InlineKeyboardButton(SUPPORT_BUTTON, "begin_chat"),
+     InlineKeyboardButton(CREDITS_BUTTON, "bot_info")]])
+# This keyboard will be sent along with GREET, feel free to add or remove buttons
 
 # Database configuration
 # The only natively supported database is SQLite3, but you can easily tweak
@@ -92,118 +112,127 @@ DB_PATH = os.path.join(os.getcwd(), f"BotBase/database/database.db")
 DB_CREATE = """CREATE TABLE IF NOT EXISTS users (
                         id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                         tg_id INTEGER UNIQUE NOT NULL,
-                        uname TEXT UNIQUE NULL DEFAULT 'null',
+                        tg_uname TEXT UNIQUE NULL DEFAULT 'null',
                         date TEXT NOT NULL,
                         banned INTEGER NOT NULL DEFAULT 0);
             """
 
 DB_GET_USERS = "SELECT tg_id FROM users"
 DB_GET_USER = "SELECT * FROM users where users.tg_id = ?"
-DB_SET_USER = "INSERT INTO users (id, tg_id, uname, date, banned) VALUES(?, ?, ?, ?, ?)"
+DB_SET_USER = "INSERT INTO users (id, tg_id, tg_uname, date, banned) VALUES(?, ?, ?, ?, ?)"
 DB_BAN_USER = "UPDATE users SET banned = 1 WHERE users.tg_id = ?"
 DB_UNBAN_USER = "UPDATE users SET banned = 0 WHERE users.tg_id = ?"
-DB_UPDATE_NAME = "UPDATE users SET uname = ? WHERE users.tg_id = ?"
-DB_GET_USER_BY_NAME = "SELECT * FROM users where users.uname = ?"
+DB_UPDATE_NAME = "UPDATE users SET tg_uname = ? WHERE users.tg_id = ?"
+DB_GET_USER_BY_NAME = "SELECT * FROM users where users.tg_uname = ?"
 from BotBase.database.query import get_user
 
 # Admin module configuration
-
-# Edit this dict adding the ID:NAME pair of the admin that you want to add. You can add as many admins as you want
 ADMINS = {1234567: "Lorem Ipsum"}
-MARKED_BUSY = "🎲 Ora sei impegnato, invia nuovamente /busy per resettare questo stato"
-UNMARKED_BUSY = "✍ Da ora riceverai nuovamente le richieste di assistenza"
-CANNOT_BAN_ADMIN = "❌ L'utente é un amministratore"
-USER_BANNED = "✅ Utente bannato"
-USER_UNBANNED = "✅ Utente sbannato"
-YOU_ARE_UNBANNED = "✅ Sei stato sbannato"
-USER_NOT_BANNED = "❌ L'utente non é bannato"
-CLOSE_CHAT_BUTTON = "❌ Chiudi chat"
-UPDATE_BUTTON = "🔄 Aggiorna"
-USER_ALREADY_BANNED = "❌ L'utente é già bannato"
-YOU_ARE_BANNED = "❌ Sei stato bannato"
-WHISPER_FROM = "📣 Messaggio da {admin}: {msg}"
-WHISPER_SUCCESSFUL = "✅ Inviato"
+# Edit this dict adding the ID:NAME pair of the admin that you want to add. You can add as many admins as you want.
+MARKED_BUSY = "🎲 You're now busy, resend /busy to reset this state"
+UNMARKED_BUSY = "✍ You'll now receive support requests again"
+CANNOT_BAN_ADMIN = "❌ <b>Error</>: This user is an administrator"
+USER_BANNED = "✅ <b>User banned successfully</b>"
+USER_UNBANNED = "✅ <b>User unbanned successfully</b>"
+YOU_ARE_UNBANNED = "✅ <b>You've been unbanned</b>"
+USER_NOT_BANNED = "❌ <b>This user isn't banned</b>"
+CLOSE_CHAT_BUTTON = "❌ Close chat"
+UPDATE_BUTTON = "🔄 Update"
+USER_ALREADY_BANNED = "❌ <b>This user is already banned</b>"
+YOU_ARE_BANNED = "❌ <b>You've been banned</b>"
+WHISPER_FROM = "📣 <b>Message from</b> {admin}: {msg}"
+WHISPER_SUCCESSFUL = "✅ <b>Sent successfully</b>"
 NAME = "tg://user?id={}"
-BYPASS_FLOOD = True  # If False, admins can be flood-blocked too, otherwise the antiflood will ignore them
-USER_INFO_UPDATED = "✅ Informazioni aggiornate"
-USER_INFO_UNCHANGED = "❌ Non ho rilevato cambiamenti per questo utente"
-ADMIN_ACCEPTED_CHAT = "✅ {admin} ha preso in carico la chat con {user}"
-USER_LEFT_QUEUE = "⚠️ {user} ha lasciato la coda"
-QUEUE_LIST = "🚻 Lista utenti in attesa\n\n{queue}"
-CHATS_LIST = "💬 Lista utenti in chat\n\n{chats}"
-ADMIN_BUSY = "(Occupato)"
-USER_INFO = """ℹ️ <b>Informazioni</b>
+BYPASS_FLOOD = True
+# If False, admins can be flood-blocked too, otherwise the antiflood will ignore them
+USER_INFO_UPDATED = "✅ <i>Information updated</i>"
+USER_INFO_UNCHANGED = "❌ <b>I haven't detected any changes for this user</b>"
+ADMIN_ACCEPTED_CHAT = "✅ {admin} has joined the chat with {user}"
+USER_LEFT_QUEUE = "⚠️ {user} left the queue"
+QUEUE_LIST = "🚻 List of users waiting\n\n{queue}"
+CHATS_LIST = "💬 List of users in chat\n\n{chats}"
+ADMIN_BUSY = "(Busy)"
+USER_INFO = """ℹ️ <b>User infos</b>
 
-🆔 <b>ID</b>: <code>{uid}</code>
-✍️ <b>Username</b>: {uname}
-🗓 <b>Registrato il</b>: <code>{date}</code>
-⌨️ <b>Bannato</b>: <code>{status}</code>
-💡 <b>Admin</b>: <code>{admin}</code>"""  # The message that is sent with /getuser and /getranduser
-INVALID_SYNTAX = "❌ <b>Sintassi invalida</b>: Usa <code>{correct}</code>"  # This is sent when a command is used the wrong way
-ERROR = "❌ <b>Errore</b>"  # This is sent when a command returns an error
-NONNUMERIC_ID = "L'ID deve essere numerico!"  # This is sent if the parameter to /getuser is not a numerical ID
-USERS_COUNT = "<b>Utenti totali</b>: <code>{count}</code>"  # This is sent as a result of the /count command
-NO_PARAMETERS = "❌ <code>{command}</code> non richiede parametri"  # Error saying that the given command takes no parameters
-ID_MISSING = "L'ID selezionato (<code>{uid}</code>) non é nel database"  # Error when given ID is not in database
-NAME_MISSING = "L'username selezionato (<code>{uname}</code>) non é nel database"  # Error when given username is not in database
-YES = "Sì"
+🆔 <b>ID</b>: <code>{tg_id}</code>
+✍️ <b>Username</b>: {tg_uname}
+🗓 <b>Registered on</b>: <code>{date}</code>
+⌨️ <b>Banned</b>: <code>{status}</code>
+💡 <b>Admin</b>: <code>{admin}</code>"""
+# The message that is sent with /getuser and /getranduser
+INVALID_SYNTAX = "❌ <b>Invalid syntax</b>: Use <code>{correct}</code>"
+# This is sent when a command is used the wrong way
+ERROR = "❌ <b>Error</b>"
+# This is sent when a command returns an error
+NON_NUMERIC_ID = "The ID must be numeric!"
+# This is sent if the parameter to /getuser is not a numerical ID
+USERS_COUNT = "<b>Total users</b>: <code>{count}</code>"
+# This is sent as a result of the /count command
+NO_PARAMETERS = "❌ <code>{command}</code> requires no parameters"
+# Error saying that the given command takes no parameters
+ID_MISSING = "The selected ID (<code>{tg_id}</code>) isn't in the database"
+# Error when given ID is not in database
+NAME_MISSING = "The selected username (<code>{tg_uname}</code>) isn't in the database"
+# Error when given username is not in database
+YES = "Yes"
 NO = "No"
-GLOBAL_MESSAGE_STATS = """<b>Statistiche messaggio</b>
+GLOBAL_MESSAGE_STATS = """<b>Message Statistics</b>
 
-✍️ <b>Messaggio</b>: <code>{msg}</code>
-🔄 <b>Tentativi</b>: <code>{count}</code>
-✅ <b>Consegnati</b>: <code>{success}</code>"""  # Statistics that are sent to the admin after /global command
+✍️ <b>Message</b>: <code>{msg}</code>
+🔄 <b>Attempts</b>: <code>{count}</code>
+✅ <b>Delivered</b>: <code>{success}</code>"""
+# Statistics that are sent to the admin after /global command
 
 # Live chat configuration
 
-ADMINS_LIST_UPDATE_DELAY = 30  # How many seconds between an update and another
-
-# These strings are pretty self explanatory, aren't they?
-LIVE_CHAT_STATUSES = "Legenda: 🟢 = Disponibile, 🔴 = Occupato\n\n"
-SUPPORT_NOTIFICATION = "🔔 Nuova richiesta di supporto!\n\n{uinfo}"
-ADMIN_JOINS_CHAT = " [{admin_name}]({admin_id}) entra in chat!"
-USER_CLOSES_CHAT = "🔔 [{user_name}]({user_id}) ha chiuso la chat"
-USER_LEAVES_CHAT = "✅ Hai lasciato la chat"
-USER_JOINS_CHAT = "✅ Sei entrato in chat"
-CHAT_BUSY = "⚠️ Un altro admin é già entrato"
-LEAVE_CURRENT_CHAT = "⚠️ Chiudi prima la chat corrente!"
-CANNOT_REQUEST_SUPPORT = "⚠️ Non puoi avviare la chat!"
+ADMINS_LIST_UPDATE_DELAY = 30
+# How many seconds between an update and another
+LIVE_CHAT_STATUSES = "Legend: 🟢 = Available, 🔴 = Busy\n\n"
+SUPPORT_NOTIFICATION = "🔔 New support request!\n\n{uinfo}"
+ADMIN_JOINS_CHAT = " [{admin_name}]({admin_id}) joined the chat!"
+USER_CLOSES_CHAT = "🔔 [{user_name}]({user_id}) closed the chat"
+USER_LEAVES_CHAT = "✅ You left the chat"
+USER_JOINS_CHAT = "✅ You've joined the chat"
+CHAT_BUSY = "⚠️ Another admin has already joined"
+LEAVE_CURRENT_CHAT = "⚠️ Close current chat first!"
+CANNOT_REQUEST_SUPPORT = "⚠️ You can't start a chat!"
 STATUS_FREE = "🟢 "
 STATUS_BUSY = "🔴 "
-SUPPORT_REQUEST_SENT = "✅ Ora sei in coda, attendi che un admin ti risponda\n\n" \
-                       "🔄 <b>Admin disponibili</b>\n{queue}\n<b>Aggiornato il</b>: <code>{date}</code>\n\n<b>Nota</b>: <i>Se non ci sono admin disponibili al momento, premi il bottone 'Aggiorna' ogni tanto per scoprire se si é liberato un posto!</i>"
-JOIN_CHAT_BUTTON = "❗ Entra in chat"
+SUPPORT_REQUEST_SENT = "✅ You're now in the queue, wait for an admin to answer you\n\n" \
+                       "🔄 <b>Admins available</b>\n{queue}\n<b>Updated on</b>: <code>{date}</code>\n\n<b>Note</b>: " \
+                       "<i>If there are no admins available at the moment, press the 'Update' button every now and " \
+                       "then to find out if a seat is available!"
+JOIN_CHAT_BUTTON = "❗ Join the chat"
 USER_MESSAGE = "🗣 [{user_name}]({user_id}): {message}"
 ADMIN_MESSAGE = "🧑‍💻 [{user_name}]({user_id}): {message}"
-TOO_FAST = "✋ Non così veloce! Riprova piú tardi"
+TOO_FAST = "✋ Calm down! Try again later"
 
 
 # Custom filters  - Don't touch them as well but feel free to add more!
 
-
 def check_user_banned(tg_id: int):
-    res = get_user(tg_id)
+    res = check_banned(tg_id)
     if isinstance(res, Exception):
         return False
     else:
         if not res:
             return False
-        return res[-1]
+        return bool(res[0])
 
 
 def callback_regex(pattern: str):
-    return Filters.create(lambda _, update: re.match(pattern, update.data))
+    return filters.create(lambda flt, client, update: re.match(pattern, update.data))
 
 
 def admin_is_chatting():
-    return Filters.create(
-        lambda _, update: update.from_user.id in ADMINS and CACHE[update.from_user.id][0] == "IN_CHAT")
+    return filters.create(
+        lambda flt, client, update: update.from_user.id in ADMINS and CACHE[update.from_user.id][0] == "IN_CHAT")
 
 
 def user_is_chatting():
-    return Filters.create(
-        lambda _, update: update.from_user.id not in ADMINS and CACHE[update.from_user.id][0] == "IN_CHAT")
+    return filters.create(
+        lambda flt, client, update: update.from_user.id not in ADMINS and CACHE[update.from_user.id][0] == "IN_CHAT")
 
 
 def user_banned():
-    return Filters.create(lambda _, update: check_user_banned(update.from_user.id))
+    return filters.create(lambda flt, client, update: check_user_banned(update.from_user.id))

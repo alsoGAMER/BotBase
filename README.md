@@ -14,7 +14,7 @@ Also, you need to know how to host a bot yourself. I mean, I coded all of this f
 
 To set up a project using BotBase, follow this step-by-step guide (assuming `pip` and `git` are already installed and up to date):
 
-- Open a terminal and type `git clone https://github.com/nocturn9x/BotBase`
+- Open a terminal and type `git clone https://github.com/alsoGAMER/BotBase`
 - `cd` into the newly created directory and run `python3 -m pip install -r requirements.txt`
 - Once that is done, copy `BotBase/config.example.py` as `config.py` and edit your `config.py` module with a text editor and start changing the default settings
 - The first thing you might want to do is change the `API_ID`, `API_HASH`, and `BOT_TOKEN` global variables. Check [this page](https://my.telegram.org/apps) and log in with your Telegram account to create an `API_ID`/`API_HASH` pair by registering a new application. For the bot token, just create one with [BotFather](https://telegram.me/BotFather).
@@ -31,7 +31,7 @@ As of now, the following plugins are active:
 
 - An advanced live chat accessible through buttons
 - A start module that simply replies to /start and adds the user to the database if not already present
-- An highly customizable antiflood module 
+- A highly customizable antiflood module 
 - An administration module with lots of pre-built features such as /global and /whisper
 
 
@@ -46,7 +46,7 @@ This plugin works the following way:
 - The notification will contain the user information such as ID and username, if available
 - At the same time, the user will see a waiting queue. Available admins will be shown with a green sphere next to their name, while admins that are already chatting will be shown as busy
 - The user can press the update button to update the admin's statuses
-- When an administrator joins, all notifications from all admins are automatically deleted and the admin is marked as busy
+- When an administrator joins, all notifications from all admins are automatically deleted, and the admin is marked as busy
 - When an admin joins a chat, other admins won't be able to join
 - Admins that are busy will not receive other support notifications
 - An admin cannot join a chat if it's already busy
@@ -75,7 +75,7 @@ The available commands are:
 - `/whisper ID msg`: Send `msg` to a specific user given its ID. HTML and markdown formatting supported
 - `/update ID`: Updates the user's info in the database, if they've changed
 - `/busy`: Sets your admin status as busy/not busy to silence/unsilence support requests to you
-- `/userbyname`: Same as `getuser`, but takes a username (case-insensitive, with or without the @) as input. Note that if the database contains multiple users with the same username, due to old data, for instance, only the first entry is returned
+- `/userbyname`: Same as `getuser`, but takes a username (case-insensitive, with or without the @) as input. Note that if the database contains multiple users with the same username, due to old data, for instance, only the first entry is returned.
 
 ### Plugins - Antiflood
 
@@ -92,7 +92,7 @@ To configure it, check its section in the `config.py` file
 
 ## Extending the default functionality
 
-Extending BotBase's functionality is easy, just create a pyrogram smart plugin in the `BotBase/modules` section and you're ready to go!
+Extending BotBase's functionality is easy, just create a pyrogram smart plugin in the `BotBase/modules` section, and you're ready to go!
 
 If you don't know what a smart plugin is, check [this link](https://docs.pyrogram.org/topics/smart-plugins) from pyrogram's official documentation to know more.
 
@@ -101,7 +101,7 @@ There are some things to keep in mind, though:
 - If you want to protect your plugin from flood, import the `BotBase.modules.antiflood.BANNED_USERS` filter (basically a `Filters.user()` object) and use it like this: `~BANNED_USERS`. This will restrict banned users from reaching your handler at all.
 Please note that users banned with the `/ban` command are filtered with the custom filter `BotBase.config.user_banned`!
 - To avoid repetition with try/except blocks, BotBase implements a wrapper object that performs automatic exception handling and log to the console, check the `METHODS.md` file in this repo to know more
-- Nothing restricts you from changing how the default plugins work, but this is not advised. The default plugins have been designed to cooperate and breaking this might lead to obscure tracebacks and errors that are hard to debug
+- Nothing restricts you from changing how the default plugins work, but this is not advised. The default plugins have been designed to cooperate and breaking this might lead to obscure tracebacks and errors that are hard to debug.
 - BotBase also has many default methods to handle database interaction, check the `DATABASE.md` file in this repo to know more
 
 

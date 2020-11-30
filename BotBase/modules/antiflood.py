@@ -1,5 +1,5 @@
 """
-Copyright 2020 Nocturn9x & alsoGAMER
+Copyright 2020 Nocturn9x, alsoGAMER, CrisMystik
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,24 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from collections import defaultdict
 import logging
 import time
-from collections import defaultdict
 
-from pyrogram import Client, Filters
+from pyrogram import Client, filters
 
-from BotBase.config import MAX_UPDATE_THRESHOLD, ANTIFLOOD_SENSIBILITY, BAN_TIME, ADMINS, BYPASS_FLOOD, FLOOD_NOTICE, \
-    FLOOD_PERCENTAGE, CACHE, PRIVATE_ONLY, DELETE_MESSAGES, bot, user_banned, FLOOD_CLEARED, FLOOD_USER_CLEARED, \
-    ERROR, NONNUMERIC_ID
+from BotBase.config import ADMINS, ANTIFLOOD_SENSIBILITY, BAN_TIME, BYPASS_FLOOD, CACHE, DELETE_MESSAGES, ERROR, \
+    FLOOD_CLEARED, FLOOD_NOTICE, FLOOD_PERCENTAGE, FLOOD_USER_CLEARED, MAX_UPDATE_THRESHOLD, NON_NUMERIC_ID, \
+    PRIVATE_ONLY, bot, user_banned
 from BotBase.methods import MethodWrapper
 
 # Some variables for runtime configuration
 
 MESSAGES = defaultdict(list)  # Internal variable for the antiflood module
-BANNED_USERS = Filters.user()  # Filters where the antiflood will put banned users
-BYPASS_USERS = Filters.user(list(ADMINS.keys())) if BYPASS_FLOOD else Filters.user()
-ADMINS = Filters.user(list(ADMINS.keys()))
-FILTER = Filters.private if PRIVATE_ONLY else ~Filters.user()
+BANNED_USERS = filters.user()  # Filters where the antiflood will put banned users
+BYPASS_USERS = filters.user(list(ADMINS.keys())) if BYPASS_FLOOD else filters.user()
+ADMINS = filters.user(list(ADMINS.keys()))
+FILTER = filters.private if PRIVATE_ONLY else ~filters.user()
 wrapper = MethodWrapper(bot)
 
 
@@ -48,7 +48,7 @@ def is_flood(updates: list):
 
 
 @Client.on_message(FILTER & ~BYPASS_USERS & ~user_banned(), group=-1)
-def anti_flood(_, update):
+async def anti_flood(_, update):
     """Anti flood module"""
 
     user_id = update.from_user.id
@@ -74,9 +74,9 @@ def anti_flood(_, update):
             BANNED_USERS.add(user_id)
             MESSAGES[user_id] = chat, time.time()
             if FLOOD_NOTICE:
-                wrapper.send_message(user_id, FLOOD_NOTICE)
+                await wrapper.send_message(user_id, FLOOD_NOTICE)
             if DELETE_MESSAGES:
-                wrapper.delete_messages(chat, updates)
+                await wrapper.delete_messages(chat, updates)
         else:
             if user_id in MESSAGES:
                 del MESSAGES[user_id]
@@ -84,20 +84,19 @@ def anti_flood(_, update):
         MESSAGES[user_id].append({chat: (date, message_id)})
 
 
-@Client.on_message(FILTER & ADMINS & ~Filters.edited & Filters.command("clearflood"))
-def clear_flood(_, message):
+@Client.on_message(FILTER & ADMINS & ~filters.edited & filters.command("clearflood"))
+async def clear_flood(_, message):
     if len(message.command) == 1:
         global MESSAGES  # Ew...
         MESSAGES = defaultdict(list)
         for user in BANNED_USERS.copy():
             BANNED_USERS.remove(user)
-        wrapper.send_message(message.chat.id, FLOOD_CLEARED)
+        await wrapper.send_message(message.chat.id, FLOOD_CLEARED)
     else:
         for user in message.command[1:]:
             if not user.isdigit():
-                wrapper.send_message(message.chat.id, f"{ERROR}: {NONNUMERIC_ID}")
-                return
+                return await wrapper.send_message(message.chat.id, f"{ERROR}: {NON_NUMERIC_ID}")
             BANNED_USERS.discard(int(user))
             MESSAGES.pop(int(user), None)
-        wrapper.send_message(message.chat.id,
-                             FLOOD_USER_CLEARED.format(user=", ".join((f"{usr}" for usr in message.command[1:]))))
+        await wrapper.send_message(message.chat.id,
+                                   FLOOD_USER_CLEARED.format(user=", ".join((f"{usr}" for usr in message.command[1:]))))

@@ -1,5 +1,5 @@
 """
-Copyright 2020 Nocturn9x & alsoGAMER
+Copyright 2020 Nocturn9x, alsoGAMER, CrisMystik
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,14 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from pyrogram import Client, CallbackQuery, InlineQuery
-from pyrogram.errors import RPCError
 import logging
 from typing import Union
 
+from pyrogram import Client
+from pyrogram.errors import RPCError
+from pyrogram.types import CallbackQuery, InlineQuery
+
 
 class MethodWrapper(object):
-    """A class that that implements a wrapper around ``pyrogram.Client`` methods.
+    """A class that's implements a wrapper around ``pyrogram.Client`` methods.
        To access a pyrogram method just call ``MethodWrapper.method_name``.
        All method calls are performed in a try/except block and either return
        the exception object if an error occurs, or the result of the called
@@ -40,10 +42,10 @@ class MethodWrapper(object):
         if attribute in self.__dict__:
             return self.__dict__[attribute]
         else:
-            def wrapper(*args, **kwargs):
+            async def wrapper(*args, **kwargs):
                 if hasattr(self.instance, attribute):
                     try:
-                        return getattr(self.instance, attribute)(*args, **kwargs)
+                        return await getattr(self.instance, attribute)(*args, **kwargs)
                     except RPCError as rpc_error:
                         logging.error(f"An exception occurred -> {type(rpc_error).__name__}: {rpc_error}")
                         return rpc_error

@@ -5,7 +5,7 @@ BotBase has a built-in API to interact with an SQLite3 database, located in the
 lots of options is that it's lightweight, has fewer security concerns (no user
 and password to remember), and requires no setup at all.
 
-The configuration is hassle-free, you can keep the default values and they'll
+The configuration is hassle-free, you can keep the default values, and they'll
 work just fine. If you need a more complex database structure, just edit
 the `DB_CREATE` SQL query to fit your needs, but do not alter the default
 `users` table unless you also change all the SQL queries in the `config.py`
@@ -31,7 +31,7 @@ the date and time the user was inserted in the database as a string
 that represents the user's status (whether it is banned or not)
 
 - `get_users()` -> This method takes no parameter and returns a list
-of tuples. Each tuple contains a user ID is stored in the database
+of tuples. Each tuple contains a user ID is stored in the database.
 
 - `set_user()` -> Saves an ID/username pair (in this order)
 to the database. The username parameter can be `None`
@@ -46,7 +46,7 @@ to the database. The username parameter can be `None`
 
 The API has been designed in a way that makes it easy to swap between different
 database managers, so if you feel in the right mood make a PR to support a new
-database and it'll be reviewed ASAP.
+database, and it'll be reviewed ASAP.
 
 
 # Adding more methods
