@@ -124,7 +124,7 @@ DB_BAN_USER = "UPDATE users SET banned = 1 WHERE users.tg_id = ?"
 DB_UNBAN_USER = "UPDATE users SET banned = 0 WHERE users.tg_id = ?"
 DB_UPDATE_NAME = "UPDATE users SET tg_uname = ? WHERE users.tg_id = ?"
 DB_GET_USER_BY_NAME = "SELECT * FROM users where users.tg_uname = ?"
-from BotBase.database.query import get_user
+from BotBase.database.query import check_banned
 
 # Admin module configuration
 ADMINS = {1234567: "Lorem Ipsum"}
