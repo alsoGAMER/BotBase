@@ -127,6 +127,7 @@ DB_GET_USER_BY_NAME = "SELECT * FROM users where users.tg_uname = ?"
 from BotBase.database.query import check_banned
 
 # Admin module configuration
+
 ADMINS = {1234567: "Lorem Ipsum"}
 # Edit this dict adding the ID:NAME pair of the admin that you want to add. You can add as many admins as you want.
 MARKED_BUSY = "🎲 You're now busy, resend /busy to reset this state"
