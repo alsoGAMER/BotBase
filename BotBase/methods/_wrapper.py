@@ -23,7 +23,7 @@ from pyrogram.types import CallbackQuery, InlineQuery
 
 
 class MethodWrapper(object):
-    """A class that's implements a wrapper around ``pyrogram.Client`` methods.
+    """A class that implements a wrapper around ``pyrogram.Client`` methods.
        To access a pyrogram method just call ``MethodWrapper.method_name``.
        All method calls are performed in a try/except block and either return
        the exception object if an error occurs, or the result of the called

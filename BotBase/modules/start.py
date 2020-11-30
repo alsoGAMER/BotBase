@@ -23,7 +23,7 @@ from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMa
 from BotBase.modules.antiflood import BANNED_USERS
 from BotBase.config import ADMINS, BACK_BUTTON, BUTTONS, CACHE, CREDITS, GREET, NAME, USER_LEFT_QUEUE, VERSION, bot, \
     user_banned
-from BotBase.database.query import get_users, no_more_downloading, set_user
+from BotBase.database.query import get_users, set_user
 from BotBase.methods import MethodWrapper
 
 wrapper = MethodWrapper(bot)
