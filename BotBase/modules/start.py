@@ -31,16 +31,13 @@ wrapper = MethodWrapper(bot)
 
 @Client.on_message(filters.command("start") & ~BANNED_USERS & filters.private & ~user_banned())
 async def start_handler(_, update):
-    """Simply handles the /start command sending a pre-defined greeting
-    and saving new users to the database"""
-    update_wrapper = MethodWrapper(update)
+    """
+    Simply handles the /start command sending a pre-defined greeting
+    and saving new users to the database
+    """
 
-    if update.from_user.first_name:
-        name = update.from_user.first_name
-    elif update.from_user.username:
-        name = update.from_user.username
-    else:
-        name = "Anonymous"
+    update_wrapper = MethodWrapper(update)
+    name = update.from_user.first_name or update.from_user.username or "Anonymous"
     if update.from_user.id not in itertools.chain(*get_users()):
         logging.warning(f"New user detected ({update.from_user.id}), adding to database")
         set_user(update.from_user.id, update.from_user.username.lower() if update.from_user.username else None)
@@ -57,11 +54,9 @@ async def start_handler(_, update):
         elif isinstance(update, CallbackQuery):
             if CACHE[update.from_user.id][0] == "AWAITING_ADMIN":
                 data = CACHE[update.from_user.id][-1]
-
                 if isinstance(data, list):
                     for chatid, message_ids in data:
                         await wrapper.delete_messages(chatid, message_ids)
-
                 for admin in ADMINS:
                     await wrapper.send_message(
                         chat_id=admin,
@@ -83,11 +78,18 @@ async def start_handler(_, update):
 
 @Client.on_callback_query(filters.regex("back_start") & ~BANNED_USERS)
 async def cb_start_handler(_, message):
-    await start_handler(_, message)
+   """
+   Handles callback queries for the "back" button
+   """
+   
+   await start_handler(_, message)
 
 
 @Client.on_callback_query(filters.regex("bot_info") & ~BANNED_USERS)
 async def bot_info(_, query):
+    """
+    Handles the presses for the "info" button
+    """
     cb_wrapper = MethodWrapper(query)
     await cb_wrapper.edit_message_text(
         text=CREDITS.format(VERSION=VERSION),
