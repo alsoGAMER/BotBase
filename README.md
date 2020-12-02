@@ -6,7 +6,7 @@ BotBase is a collection of plugins that use [Pyrogram's](https://github.com/pyro
 
 BotBase requires a solid knowledge of pyrogram and of the Telegram MTProto API itself, you can check pyrogram's docs [here](https://docs.pyrogram.org)
 
-The author of this project assumes that the reader is not completely computer illiterate, this project is thought for smart people that want to develop better bots faster, it is **not** a beginner's friendly thing.
+The author of this project assumes that the reader is not completely computer illiterate, this project is thought for smart people that want to develop better bots faster, it is **not** a beginner's friendly framework.
 
 Also, you need to know how to host a bot yourself. I mean, I coded all of this for you already, make some effort!
 
@@ -19,7 +19,8 @@ To set up a project using BotBase, follow this step-by-step guide (assuming `pip
 - Once that is done, copy `BotBase/config.example.py` as `config.py` and edit your `config.py` module with a text editor and start changing the default settings
 - The first thing you might want to do is change the `API_ID`, `API_HASH`, and `BOT_TOKEN` global variables. Check [this page](https://my.telegram.org/apps) and log in with your Telegram account to create an `API_ID`/`API_HASH` pair by registering a new application. For the bot token, just create one with [BotFather](https://telegram.me/BotFather).
 
-**Note**: The configuration file is still a python file and when it will be imported any python code that you typed inside it will be executed, so be careful! If you need to perform pre-startup operations it is advised to do them in the `if __name__ == "main":` block inside `bot.py`, before `bot.start()`
+**Note**: The configuration file is still a python file, and when it will be imported any python code that you typed inside it will be executed, so be careful.
+If you need to perform pre-startup operations it is advised to do them in the `if __name__ == "main":` block inside `bot.py`, before `await bot.start()`
 
 Once you're done configuring, move to the top-level directory of the project and run `python3 bot.py`
 
@@ -66,26 +67,37 @@ To configure this plugin, go to the appropriate section in `config.py` and chang
 
 The available commands are:
 
-- `/getuser ID`: Fetches user information by its Telegram ID
+__Note__: ID can either be a Telegram User ID or a Telegram username (with or without the trailing @, case insensitive)
+
+__Note__: Arguments marked with square brackets are optional
+
+- `/getuser ID`: Fetches information about the given user
 - `/getranduser`: Fetches a random user from the database
 - `/ban ID`: Bans a user from using the bot, permanently
 - `/unban ID`: Unbans a user from using the bot
 - `/count`: Shows the current number of registered users
 - `/global msg`: Broadcast `msg` to all users, supports HTML and markdown formatting
-- `/whisper ID msg`: Send `msg` to a specific user given its ID. HTML and markdown formatting supported
+- `/whisper ID msg`: Send `msg` to a specific user. HTML and markdown formatting supported
 - `/update ID`: Updates the user's info in the database, if they've changed
 - `/busy`: Sets your admin status as busy/not busy to silence/unsilence support requests to you
-- `/userbyname`: Same as `getuser`, but takes a username (case-insensitive, with or without the @) as input. Note that if the database contains multiple users with the same username, due to old data, for instance, only the first entry is returned.
+- `/clearflood [ID]` - Clears the antiflood local storage. If an user ID is given, only that user's cache is purged, otherwise the whole module-level cache is reset-
+
+__Warning__: Altough acting on users by their username is supported, it is not recommended. Users can change their name and the bot wouldn't detect
+this change until you send the `/update` command. A telegram user can never change its ID (without deleting his own account) so that's way more reliable!
 
 ### Plugins - Antiflood
 
-The antiflood plugin is a well-designed protection system that works by accumulating a fixed number of messages from a user and then subtract their timestamps in groups of 2.
+The antiflood plugin is a well-designed and optimized floodwait protection system that works by accumulating a fixed number of messages from a user and then subtract their timestamps in groups of 2. You can choose whether to delete messages after a flood is detected, to act upon admins (or not) and send a custom
+notification to the perpetrator. Please note that this system only works in private chats, but its filters can be easily changed. Also, its handler priority
+is set to -1, so that it is the first handler to run: take this into account when you extend BotBase's functionality.
+
+__Warning__: This module has been designed to protect _the bot_ from getting floodwait exceptions from Telegram. It has been thoroughly designed and tested to achieve exactly this purpose. The antiflood _might_ work well to protect groups from flood, but it is not guaranteed. Just because it can avoid floodwaits, it doesn't mean it uses the best approach to handle a lot of users flooding at the same time in a public group!
 
 To configure this plugin and to know more about how it works, check the appropriate section in `config.py`
 
 ### Plugins - Start
 
-This module is simple, it will reply to private messages containing the /start command with a pre-defined greeting and inline buttons
+This module is simple: it will reply to private messages containing the /start command with a pre-defined greeting and inline buttons
 
 To configure it, check its section in the `config.py` file
 
