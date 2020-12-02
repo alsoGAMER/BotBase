@@ -77,7 +77,6 @@ async def start_handler(_, update):
                 reply_markup=BUTTONS
             )
 
-            no_more_downloading(update.from_user.id)
             del CACHE[update.from_user.id]
             await update_wrapper.answer()
 
