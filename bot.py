@@ -18,10 +18,12 @@ import logging
 
 from BotBase.config import bot, LOGGING_LEVEL, LOGGING_FORMAT, DATE_FORMAT, DB_PATH, DB_CREATE
 from BotBase.database.query import create_database
+from pyrogram.session import Session
 
 
 if __name__ == "__main__":
     logging.basicConfig(format=LOGGING_FORMAT, datefmt=DATE_FORMAT, level=LOGGING_LEVEL)
+    Session.notice_displayed = True
     try:
         logging.warning("Running create_database()")
         create_database(DB_PATH, DB_CREATE)
