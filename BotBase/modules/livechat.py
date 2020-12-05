@@ -59,7 +59,7 @@ async def begin_chat(_, query):
         join_chat_button = InlineKeyboardMarkup(
             [[InlineKeyboardButton(JOIN_CHAT_BUTTON, f"join_{query.from_user.id}")]])
         user = get_user(query.from_user.id)
-        _, tg_id, tg_uname, date, banned = user
+        tg_id, tg_uname, date, banned = user
         text = USER_INFO.format(tg_id=tg_id,
                                 tg_uname='@' + tg_uname if tg_uname else 'null',
                                 date=date,
@@ -95,7 +95,7 @@ async def update_admins_list(_, query):
             join_chat_button = InlineKeyboardMarkup(
                 [[InlineKeyboardButton(JOIN_CHAT_BUTTON, f"join_{query.from_user.id}")]])
             user = get_user(query.from_user.id)
-            _, uid, uname, date, banned = user
+            uid, uname, date, banned = user
             text = USER_INFO.format(uid=uid, uname='@' + uname if uname else 'null', date=date,
                                     status=YES if banned else NO,
                                     admin='N/A')
