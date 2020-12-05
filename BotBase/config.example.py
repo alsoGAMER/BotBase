@@ -48,9 +48,9 @@ DELETE_MESSAGES = True
 
 CACHE = defaultdict(lambda: ["none", 0])
 # Global cache. DO NOT TOUCH IT, really just don't
-VERSION = "2.0a"
-RELEASE_DATE = "30/11/2020"
-CREDITS = "‍💻 <b>Bot developed by</b> @yourusernamehere in <b>Python3.x</b> and <b>BotBase 2.0</b>" \
+VERSION = "2.0.1a"
+RELEASE_DATE = "05/12/2020"
+CREDITS = "‍💻 <b>Bot developed by</b> @yourusernamehere in <b>Python3.x</b> and <b>BotBase 2.0.1</b>" \
           f"\n⚙️ <b>Version</b>: <code>{VERSION}</code>\n🗓 <b>Release date</b>: <code>{RELEASE_DATE}</code>"
 # These will be shown in the 'Credits' section
 
@@ -58,7 +58,7 @@ CREDITS = "‍💻 <b>Bot developed by</b> @yourusernamehere in <b>Python3.x</b>
 
 WORKERS_NUM = 15
 # The number of worker threads that pyrogram will spawn at the startup.
-# 10 workers means that the bot will process up to 10 users at the same time and then block until one worker has done
+# 15 workers means that the bot will process up to 15 users at the same time and then block until one worker has done
 BOT_TOKEN = "BOT_TOKEN_HERE"
 # Get it with t.me/BotFather
 SESSION_NAME = "BotBase"
@@ -71,7 +71,7 @@ API_HASH = "API_HASH_HERE"
 # Same as above
 DEVICE_MODEL = "BotBase"
 # Name of the device shown in the sessions list - useless for a Bot
-SYSTEM_VERSION = "2.0a"
+SYSTEM_VERSION = "2.0.1a"
 # Host OS version, can be the same as VERSION - also useless for a Bot
 LANG_CODE = "en_US"
 # Session lang_code
