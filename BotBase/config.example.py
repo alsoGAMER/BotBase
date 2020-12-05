@@ -132,7 +132,7 @@ ADMINS = {1234567: "Lorem Ipsum"}
 # Edit this dict adding the ID:NAME pair of the admin that you want to add. You can add as many admins as you want.
 MARKED_BUSY = "🎲 You're now busy, resend /busy to reset this state"
 UNMARKED_BUSY = "✍ You'll now receive support requests again"
-CANNOT_BAN_ADMIN = "❌ <b>Error</>: This user is an administrator"
+CANNOT_BAN_ADMIN = "❌ <b>Error</b>: This user is an administrator"
 USER_BANNED = "✅ <b>User banned successfully</b>"
 USER_UNBANNED = "✅ <b>User unbanned successfully</b>"
 YOU_ARE_UNBANNED = "✅ <b>You've been unbanned</b>"
