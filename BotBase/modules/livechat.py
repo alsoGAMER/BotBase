@@ -297,7 +297,7 @@ async def join_chat(_, query):
     cb_wrapper = MethodWrapper(query)
     if CACHE[query.from_user.id][0] != "IN_CHAT":
         user_id = int(query.data.split("_")[1])
-        user = wrapper.get_users(user_id)
+        user = await wrapper.get_users(user_id)
         if isinstance(user, Exception):
             user_name = "Anonymous"
         elif user.first_name:
