@@ -100,7 +100,7 @@ async def update_admins_list(_, query):
             for admin in ADMINS:
                 status = CACHE[admin][0]
                 if status != "IN_CHAT":
-                    if status != "NOTIFICATION_SENT" and CACHE[admin][1] != uid:
+                    if status != "NOTIFICATION_SENT" and CACHE[admin][1] != tg_id:
                         message = await wrapper.send_message(admin, SUPPORT_NOTIFICATION.format(uinfo=text),
                                                              reply_markup=join_chat_button)
                         CACHE[query.from_user.id][-1].append((message.chat.id, message.message_id))
