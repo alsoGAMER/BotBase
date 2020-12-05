@@ -30,7 +30,6 @@ if __name__ == "__main__":
         logging.warning("Database interaction complete")
         logging.warning("Starting bot")
         bot.run()
-        logging.warning("Bot started")
     except Exception as e:
         logging.warning(f"Stopping bot due to a {type(e).__name__}: {e}")
         bot.stop()
