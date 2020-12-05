@@ -118,7 +118,7 @@ DB_CREATE = """CREATE TABLE IF NOT EXISTS users (
 
 DB_GET_USERS = "SELECT tg_id FROM users"
 DB_GET_USER = "SELECT * FROM users where users.tg_id = ?"
-DB_SET_USER = "INSERT INTO users (tg_id, tg_uname, date, banned) VALUES(?, ?, ?, ?, ?)"
+DB_SET_USER = "INSERT INTO users (tg_id, tg_uname, date, banned) VALUES(?, ?, ?, ?)"
 DB_BAN_USER = "UPDATE users SET banned = 1 WHERE users.tg_id = ?"
 DB_UNBAN_USER = "UPDATE users SET banned = 0 WHERE users.tg_id = ?"
 DB_CHECK_BANNED = "SELECT banned FROM users WHERE users.tg_id = ?"
