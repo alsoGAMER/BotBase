@@ -110,7 +110,6 @@ BUTTONS = InlineKeyboardMarkup([
 
 DB_PATH = os.path.join(os.getcwd(), f"BotBase/database/database.db")
 DB_CREATE = """CREATE TABLE IF NOT EXISTS users (
-                        id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                         tg_id INTEGER UNIQUE NOT NULL,
                         tg_uname TEXT UNIQUE NULL DEFAULT 'null',
                         date TEXT NOT NULL,
