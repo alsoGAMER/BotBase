@@ -17,7 +17,7 @@ To set up a project using BotBase, follow this step-by-step guide (assuming `pip
 - Open a terminal and type `git clone https://github.com/alsoGAMER/BotBase`
 - `cd` into the newly created directory and run `python3 -m pip install -r requirements.txt`
 - Once that is done, copy `BotBase/config.example.py` as `config.py` and edit your `config.py` module with a text editor and start changing the default settings
-- The first thing you might want to do is change the `API_ID`, `API_HASH`, and `BOT_TOKEN` global variables. Check [this page](https://my.telegram.org/apps) and log in with your Telegram account to create an `API_ID`/`API_HASH` pair by registering a new application. For the bot token, just create one with [BotFather](https://telegram.me/BotFather).
+- The first thing you might want to do is change the `API_ID`, `API_HASH`, and `BOT_TOKEN` global variables. Check [this page](https://my.telegram.org/apps) and log in with your Telegram account to create an `API_ID`/`API_HASH` pair by registering a new application. For the bot token, just create one with [BotFather](https://t.me/BotFather).
 
 **Note**: The configuration file is still a python file, and when it will be imported any python code that you typed inside it will be executed, so be careful.
 If you need to perform pre-startup operations it is advised to do them in the `if __name__ == "main":` block inside `bot.py`, before `bot.run()`
@@ -52,7 +52,7 @@ This plugin works the following way:
 - Admins that are busy will not receive other support notifications
 - An admin cannot join a chat if it's already busy
 
-Most of the working of the module is pre-defined, but you can customize the texts that the bot will use in the appropriate section of `config.py`
+Most of the working of the module is pre-defined, but you can customize the texts that the bot will use in the appropriate section of `strings/default_strings.py`
 
 
 ### Plugins - Admin
@@ -67,7 +67,7 @@ To configure this plugin, go to the appropriate section in `config.py` and chang
 
 The available commands are:
 
-__Note__: ID can either be a Telegram User ID or a Telegram username (with or without the trailing @, case insensitive)
+__Note__: ID can either be a Telegram User ID or a Telegram username (with or without the trailing @, case-insensitive)
 
 __Note__: Arguments marked with square brackets are optional
 
@@ -80,9 +80,9 @@ __Note__: Arguments marked with square brackets are optional
 - `/whisper ID msg`: Send `msg` to a specific user. HTML and markdown formatting supported
 - `/update ID`: Updates the user's info in the database, if they've changed
 - `/busy`: Sets your admin status as busy/not busy to silence/unsilence support requests to you
-- `/clearflood [ID]` - Clears the antiflood local storage. If an user ID is given, only that user's cache is purged, otherwise the whole module-level cache is reset-
+- `/clearflood [ID]` - Clears the antiflood local storage. If a user ID is given, only that user's cache is purged, otherwise the whole module-level cache is reset-
 
-__Warning__: Altough acting on users by their username is supported, it is not recommended. Users can change their name and the bot wouldn't detect
+__Warning__: Altough acting on users by their username is supported, it is not recommended. Users can change their name, and the bot wouldn't detect
 this change until you send the `/update` command. A telegram user can never change its ID (without deleting his own account) so that's way more reliable!
 
 ### Plugins - Antiflood

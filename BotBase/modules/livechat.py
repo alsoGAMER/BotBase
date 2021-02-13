@@ -1,5 +1,5 @@
 """
-Copyright 2020 Nocturn9x, alsoGAMER, CrisMystik
+Copyright 2020-2021 Nocturn9x, alsoGAMER, CrisMystik
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,15 +20,16 @@ import time
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from BotBase.modules.antiflood import BANNED_USERS
-from BotBase.modules.start import cb_start_handler
-from BotBase.config import CACHE, ADMINS, ADMINS_LIST_UPDATE_DELAY, callback_regex, admin_is_chatting, \
-    user_is_chatting, LIVE_CHAT_STATUSES, STATUS_BUSY, STATUS_FREE, SUPPORT_REQUEST_SENT, SUPPORT_NOTIFICATION, \
-    ADMIN_JOINS_CHAT, USER_CLOSES_CHAT, JOIN_CHAT_BUTTON, USER_INFO, USER_LEAVES_CHAT, ADMIN_MESSAGE, USER_MESSAGE, \
-    TOO_FAST, CHAT_BUSY, LEAVE_CURRENT_CHAT, USER_JOINS_CHAT, NAME, CANNOT_REQUEST_SUPPORT, YES, NO, user_banned, \
-    CLOSE_CHAT_BUTTON, BACK_BUTTON, UPDATE_BUTTON, bot, ADMIN_ACCEPTED_CHAT
+from BotBase.config import CACHE, ADMINS, ADMINS_LIST_UPDATE_DELAY, LIVE_CHAT_STATUSES, STATUS_BUSY, STATUS_FREE, \
+    USER_INFO, ADMIN_MESSAGE, USER_MESSAGE, NAME, bot
+from BotBase.strings.default_strings import SUPPORT_REQUEST_SENT, SUPPORT_NOTIFICATION, ADMIN_JOINS_CHAT, \
+    USER_CLOSES_CHAT, JOIN_CHAT_BUTTON, USER_LEAVES_CHAT, TOO_FAST, CHAT_BUSY, LEAVE_CURRENT_CHAT, USER_JOINS_CHAT, \
+    CANNOT_REQUEST_SUPPORT, YES, NO, CLOSE_CHAT_BUTTON, BACK_BUTTON, UPDATE_BUTTON, ADMIN_ACCEPTED_CHAT
+from BotBase.methods.custom_filters import callback_regex, admin_is_chatting, user_is_chatting, user_banned
 from BotBase.database.query import get_user
 from BotBase.methods import MethodWrapper
+from BotBase.modules.antiflood import BANNED_USERS
+from BotBase.modules.start import cb_start_handler
 
 ADMINS_FILTER = filters.user(list(ADMINS.keys()))
 BUTTONS = InlineKeyboardMarkup(
@@ -54,15 +55,18 @@ async def begin_chat(_, query):
             else:
                 queue += f"- {STATUS_BUSY}"
             queue += f"[{admin_name}]({NAME.format(admin_id)})\n"
-        msg = await cb_wrapper.edit_message_text(SUPPORT_REQUEST_SENT.format(queue=queue, date=time.strftime('%d/%m/%Y %T')),
-                                                 reply_markup=BUTTONS)
+        msg = await cb_wrapper.edit_message_text(
+            SUPPORT_REQUEST_SENT.format(queue=queue, date=time.strftime('%d/%m/%Y %T')),
+            reply_markup=BUTTONS)
         join_chat_button = InlineKeyboardMarkup(
             [[InlineKeyboardButton(JOIN_CHAT_BUTTON, f"join_{query.from_user.id}")]])
         user = get_user(query.from_user.id)
         tg_id, tg_uname, date, banned = user
-        text = USER_INFO.format(tg_id=tg_id, tg_uname='@' + tg_uname if tg_uname else 'null', date=date,
+        text = USER_INFO.format(tg_id=tg_id,
+                                tg_uname='@' + tg_uname if tg_uname else 'N/A',
+                                date=date,
                                 status=YES if banned else NO,
-                                admin='N/A')
+                                admin=YES if tg_id in ADMINS else NO)
         CACHE[query.from_user.id].append([])
         for admin in ADMINS:
             status = CACHE[admin][0]
@@ -88,15 +92,18 @@ async def update_admins_list(_, query):
                 else:
                     queue += f"- {STATUS_BUSY}"
                 queue += f"[{admin_name}]({NAME.format(admin_id)})\n"
-            await cb_wrapper.edit_message_text(SUPPORT_REQUEST_SENT.format(queue=queue, date=time.strftime('%d/%m/%Y %T')),
-                                               reply_markup=BUTTONS)
+            await cb_wrapper.edit_message_text(
+                SUPPORT_REQUEST_SENT.format(queue=queue, date=time.strftime('%d/%m/%Y %T')),
+                reply_markup=BUTTONS)
             join_chat_button = InlineKeyboardMarkup(
                 [[InlineKeyboardButton(JOIN_CHAT_BUTTON, f"join_{query.from_user.id}")]])
             user = get_user(query.from_user.id)
             tg_id, tg_uname, date, banned = user
-            text = USER_INFO.format(tg_id=tg_id, tg_uname='@' + tg_uname if tg_uname else 'null', date=date,
+            text = USER_INFO.format(tg_id=tg_id,
+                                    tg_uname='@' + tg_uname if tg_uname else 'N/A',
+                                    date=date,
                                     status=YES if banned else NO,
-                                    admin='N/A')
+                                    admin=YES if tg_id in ADMINS else NO)
             for admin in ADMINS:
                 status = CACHE[admin][0]
                 if status != "IN_CHAT":
@@ -150,7 +157,8 @@ async def close_chat(_, query):
             await wrapper.send_message(query.from_user.id,
                                        USER_LEAVES_CHAT)
             await wrapper.send_message(CACHE[user_id][1],
-                                       USER_CLOSES_CHAT.format(user_id=NAME.format(query.from_user.id), user_name=user_name))
+                                       USER_CLOSES_CHAT.format(user_id=NAME.format(query.from_user.id),
+                                                               user_name=user_name))
             del CACHE[query.from_user.id]
             del CACHE[admin_id]
         else:
@@ -179,7 +187,8 @@ async def forward_from_admin(_, message):
                 if CACHE[user_id][0] == "IN_CHAT":
                     del CACHE[user_id]
                     await wrapper.send_message(user_id,
-                                               USER_CLOSES_CHAT.format(user_id=NAME.format(admin_id), user_name=admin_name))
+                                               USER_CLOSES_CHAT.format(user_id=NAME.format(admin_id),
+                                                                       user_name=admin_name))
                 del CACHE[message.from_user.id]
         else:
             await wrapper.send_message(CACHE[message.from_user.id][1],
@@ -187,12 +196,14 @@ async def forward_from_admin(_, message):
                                                             user_id=NAME.format(message.from_user.id),
                                                             message=message.text.html))
     elif message.photo:
-        await wrapper.send_photo(CACHE[message.from_user.id][1], photo=message.photo.file_id, file_ref=message.photo.file_ref,
+        await wrapper.send_photo(CACHE[message.from_user.id][1], photo=message.photo.file_id,
+                                 file_ref=message.photo.file_ref,
                                  caption=ADMIN_MESSAGE.format(user_name=ADMINS[message.from_user.id],
                                                               user_id=NAME.format(message.from_user.id),
                                                               message=message.caption.html or '' if message.caption else '' if message.caption else ''))
     elif message.audio:
-        await wrapper.send_audio(CACHE[message.from_user.id][1], audio=message.audio.file_id, file_ref=message.audio.file_ref,
+        await wrapper.send_audio(CACHE[message.from_user.id][1], audio=message.audio.file_id,
+                                 file_ref=message.audio.file_ref,
                                  caption=ADMIN_MESSAGE.format(user_name=ADMINS[message.from_user.id],
                                                               user_id=NAME.format(message.from_user.id),
                                                               message=message.caption.html or '' if message.caption else ''))
@@ -206,7 +217,8 @@ async def forward_from_admin(_, message):
         await wrapper.send_sticker(CACHE[message.from_user.id][1], sticker=message.sticker.file_id,
                                    file_ref=message.sticker.file_ref)
     elif message.video:
-        await wrapper.send_video(CACHE[message.from_user.id][1], video=message.video.file_id, file_ref=message.video.file_ref,
+        await wrapper.send_video(CACHE[message.from_user.id][1], video=message.video.file_id,
+                                 file_ref=message.video.file_ref,
                                  caption=ADMIN_MESSAGE.format(user_name=ADMINS[message.from_user.id],
                                                               user_id=NAME.format(message.from_user.id),
                                                               message=message.caption.html or '' if message.caption else ''))
@@ -217,7 +229,8 @@ async def forward_from_admin(_, message):
                                                                   user_id=NAME.format(message.from_user.id),
                                                                   message=message.caption.html or '' if message.caption else ''))
     elif message.voice:
-        await wrapper.send_voice(CACHE[message.from_user.id][1], voice=message.voice.file_id, file_ref=message.voice.file_ref,
+        await wrapper.send_voice(CACHE[message.from_user.id][1], voice=message.voice.file_id,
+                                 file_ref=message.voice.file_ref,
                                  caption=ADMIN_MESSAGE.format(user_name=ADMINS[message.from_user.id],
                                                               user_id=NAME.format(message.from_user.id),
                                                               message=message.caption.html or '' if message.caption else ''))
@@ -250,32 +263,38 @@ async def forward_from_user(_, message):
                                    USER_MESSAGE.format(user_name=name, user_id=NAME.format(message.from_user.id),
                                                        message=message.text.html))
     elif message.photo:
-        await wrapper.send_photo(CACHE[message.from_user.id][1], photo=message.photo.file_id, file_ref=message.photo.file_ref,
+        await wrapper.send_photo(CACHE[message.from_user.id][1], photo=message.photo.file_id,
+                                 file_ref=message.photo.file_ref,
                                  caption=USER_MESSAGE.format(user_name=name, user_id=NAME.format(message.from_user.id),
                                                              message=message.caption.html or '' if message.caption else ''))
     elif message.audio:
-        await wrapper.send_audio(CACHE[message.from_user.id][1], audio=message.audio.file_id, file_ref=message.audio.file_ref,
+        await wrapper.send_audio(CACHE[message.from_user.id][1], audio=message.audio.file_id,
+                                 file_ref=message.audio.file_ref,
                                  caption=USER_MESSAGE.format(user_name=name, user_id=NAME.format(message.from_user.id),
                                                              message=message.caption.html or '' if message.caption else ''))
     elif message.document:
         await wrapper.send_document(CACHE[message.from_user.id][1], document=message.document.file_id,
                                     file_ref=message.document.file_ref,
-                                    caption=USER_MESSAGE.format(user_name=name, user_id=NAME.format(message.from_user.id),
+                                    caption=USER_MESSAGE.format(user_name=name,
+                                                                user_id=NAME.format(message.from_user.id),
                                                                 message=message.caption.html or '' if message.caption else ''))
     elif message.sticker:
         await wrapper.send_sticker(CACHE[message.from_user.id][1], sticker=message.sticker.file_id,
                                    file_ref=message.sticker.file_ref)
     elif message.video:
-        await wrapper.send_video(CACHE[message.from_user.id][1], video=message.video.file_id, file_ref=message.video.file_ref,
+        await wrapper.send_video(CACHE[message.from_user.id][1], video=message.video.file_id,
+                                 file_ref=message.video.file_ref,
                                  caption=USER_MESSAGE.format(user_name=name, user_id=NAME.format(message.from_user.id),
                                                              message=message.caption.html or '' if message.caption else ''))
     elif message.animation:
         await wrapper.send_animation(CACHE[message.from_user.id][1], animation=message.animation.file_id,
                                      file_ref=message.animation.file_ref,
-                                     caption=USER_MESSAGE.format(user_name=name, user_id=NAME.format(message.from_user.id),
+                                     caption=USER_MESSAGE.format(user_name=name,
+                                                                 user_id=NAME.format(message.from_user.id),
                                                                  message=message.caption.html or '' if message.caption else ''))
     elif message.voice:
-        await wrapper.send_voice(CACHE[message.from_user.id][1], voice=message.voice.file_id, file_ref=message.voice.file_ref,
+        await wrapper.send_voice(CACHE[message.from_user.id][1], voice=message.voice.file_id,
+                                 file_ref=message.voice.file_ref,
                                  caption=USER_MESSAGE.format(user_name=name, user_id=NAME.format(message.from_user.id),
                                                              message=message.caption.html or '' if message.caption else ''))
     elif message.video_note:
@@ -323,8 +342,9 @@ async def join_chat(_, query):
             for admin in ADMINS:
                 if CACHE[admin] != "IN_CHAT" and admin != admin_id:
                     await wrapper.send_message(admin,
-                                               ADMIN_ACCEPTED_CHAT.format(admin=f"[{admin_name}]({NAME.format(admin)})",
-                                                                          user=f"[{user_name}]({NAME.format(user_id)})"))
+                                               ADMIN_ACCEPTED_CHAT.format(
+                                                   admin=f"[{admin_name}]({NAME.format(admin_id)})",
+                                                   user=f"[{user_name}]({NAME.format(user_id)})"))
             CACHE[user_id][-1].append((message.chat.id, message.message_id))
             CACHE[user_id][-1].append((admin_joins.chat.id, admin_joins.message_id))
     else:

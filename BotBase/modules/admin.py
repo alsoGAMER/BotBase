@@ -1,5 +1,5 @@
 """
-Copyright 2020 Nocturn9x, alsoGAMER, CrisMystik
+Copyright 2020-2021 Nocturn9x, alsoGAMER, CrisMystik
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@ import re
 
 from pyrogram import Client, filters
 
-from BotBase.config import ADMINS, CACHE, CANNOT_BAN_ADMIN, CHATS_LIST, ERROR, \
-    GLOBAL_MESSAGE_STATS, ID_MISSING, INVALID_SYNTAX, LEAVE_CURRENT_CHAT, MARKED_BUSY, NAME, NAME_MISSING, NO, \
-    NON_NUMERIC_ID, NO_PARAMETERS, QUEUE_LIST, UNMARKED_BUSY, USERS_COUNT, USER_ALREADY_BANNED, \
-    USER_BANNED, USER_INFO, USER_INFO_UNCHANGED, USER_INFO_UPDATED, USER_NOT_BANNED, USER_UNBANNED, \
-    WHISPER_FROM, WHISPER_SUCCESSFUL, YES, YOU_ARE_BANNED, YOU_ARE_UNBANNED, bot
+from BotBase.config import ADMINS, CACHE, GLOBAL_MESSAGE_STATS, NAME, USER_INFO, bot
+from BotBase.strings.default_strings import CANNOT_BAN_ADMIN, CHATS_LIST, ERROR, ID_MISSING, INVALID_SYNTAX, \
+    LEAVE_CURRENT_CHAT, MARKED_BUSY, NAME_MISSING, NO, NON_NUMERIC_ID, NO_PARAMETERS, QUEUE_LIST, UNMARKED_BUSY, \
+    USERS_COUNT, USER_ALREADY_BANNED, USER_BANNED, USER_INFO_UNCHANGED, USER_INFO_UPDATED, USER_NOT_BANNED, \
+    USER_UNBANNED, WHISPER_FROM, WHISPER_SUCCESSFUL, YES, YOU_ARE_BANNED, YOU_ARE_UNBANNED
 from BotBase.database.query import ban_user, get_user, get_user_by_name, get_users, unban_user, update_name
 from BotBase.methods import MethodWrapper
 from BotBase.modules.antiflood import BANNED_USERS
@@ -38,10 +38,10 @@ def format_user(user):
     tg_id, tg_uname, date, banned = user
     return USER_INFO.format(
         tg_id=tg_id,
-        tg_uname='@' + tg_uname if tg_uname else 'null',
+        tg_uname='@' + tg_uname if tg_uname else 'N/A',
         date=date,
         status=YES if banned else NO,
-        admin=YES if tg_id in ADMINS else NO
+        admin=YES if tg_id in ADMINS else NO,
     )
 
 
@@ -230,7 +230,7 @@ async def ban(_, message):
         else:
             await wrapper.send_message(message.chat.id, USER_NOT_BANNED if condition else USER_ALREADY_BANNED)
     else:
-        await wrapper.send_message(message.chat.id, f"{ERROR}: {ID_MISSING.format(uid=message.command[1])}")
+        await wrapper.send_message(message.chat.id, f"{ERROR}: {ID_MISSING.format(tg_id=message.command[1])}")
 
 
 @Client.on_message(filters.command("busy") & ADMINS_FILTER & filters.private & ~BANNED_USERS & ~filters.edited)

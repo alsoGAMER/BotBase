@@ -1,5 +1,5 @@
 """
-Copyright 2020 Nocturn9x, alsoGAMER, CrisMystik
+Copyright 2020-2021 Nocturn9x, alsoGAMER, CrisMystik
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,11 +20,12 @@ import logging
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-from BotBase.modules.antiflood import BANNED_USERS
-from BotBase.config import ADMINS, BACK_BUTTON, BUTTONS, CACHE, CREDITS, GREET, NAME, USER_LEFT_QUEUE, VERSION, bot, \
-    user_banned
+from BotBase.config import ADMINS, BUTTONS, CACHE, CREDITS, GREET, NAME, VERSION, bot
+from BotBase.strings.default_strings import BACK_BUTTON, USER_LEFT_QUEUE
+from BotBase.methods.custom_filters import user_banned
 from BotBase.database.query import get_users, set_user
 from BotBase.methods import MethodWrapper
+from BotBase.modules.antiflood import BANNED_USERS
 
 wrapper = MethodWrapper(bot)
 
@@ -86,8 +87,8 @@ async def cb_start_handler(_, message):
     await start_handler(_, message)
 
 
-@Client.on_callback_query(filters.regex("bot_info") & ~BANNED_USERS)
-async def bot_info(_, query):
+@Client.on_callback_query(filters.regex("bot_about") & ~BANNED_USERS)
+async def bot_about(_, query):
     cb_wrapper = MethodWrapper(query)
     await cb_wrapper.edit_message_text(
         text=CREDITS.format(VERSION=VERSION),

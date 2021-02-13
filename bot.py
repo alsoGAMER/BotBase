@@ -1,5 +1,5 @@
 """
-Copyright 2020 Nocturn9x, alsoGAMER, CrisMystik
+Copyright 2020-2021 Nocturn9x, alsoGAMER, CrisMystik
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,17 +16,18 @@ limitations under the License.
 
 import logging
 
-from BotBase.config import bot, LOGGING_LEVEL, LOGGING_FORMAT, DATE_FORMAT, DB_PATH, DB_CREATE
-from BotBase.database.query import create_database
 from pyrogram.session import Session
 
+from BotBase.config import bot, LOGGING_LEVEL, LOGGING_FORMAT, DATE_FORMAT
+from BotBase.database.raw_queries import CREATE_USERS_TABLE
+from BotBase.database.query import create_table
 
 if __name__ == "__main__":
     logging.basicConfig(format=LOGGING_FORMAT, datefmt=DATE_FORMAT, level=LOGGING_LEVEL)
     Session.notice_displayed = True
     try:
-        logging.warning("Running create_database()")
-        create_database(DB_PATH, DB_CREATE)
+        logging.warning("Running create_table()")
+        create_table(CREATE_USERS_TABLE)
         logging.warning("Database interaction complete")
         logging.warning("Starting bot")
         bot.run()

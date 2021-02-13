@@ -1,5 +1,5 @@
 """
-Copyright 2020 Nocturn9x, alsoGAMER, CrisMystik
+Copyright 2020-2021 Nocturn9x, alsoGAMER, CrisMystik
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -51,4 +51,5 @@ class MethodWrapper(object):
                         return rpc_error
                 else:
                     raise AttributeError(self.instance, attribute)
+
             return wrapper

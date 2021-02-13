@@ -1,14 +1,14 @@
 # BotBase - Notes on database interaction
 
-BotBase has a built-in API to interact with an SQLite3 database, located in the
-`BotBase/database/query.py` module. The reason why SQLite3 was chosen among the
-lots of options is that it's lightweight, has fewer security concerns (no user
-and password to remember), and requires no setup at all.
+BotBase has a built-in API to interact with an MySQL database, located in the
+`BotBase/database/query.py` module. The reason why MySQL was chosen among the
+lots of options is that it's solid enough for bots with standard load, 
+has enough features, and requires little to no setup at all.
 
 The configuration is hassle-free, you can keep the default values, and they'll
 work just fine. If you need a more complex database structure, just edit
-the `DB_CREATE` SQL query to fit your needs, but do not alter the default
-`users` table unless you also change all the SQL queries in the `config.py`
+the `CREATE_USERS_TABLE` SQL query to fit your needs, but do not alter the default
+`users` table unless you also change all the SQL queries in the `raw_queries.py`
 file as this would otherwise break the whole internal machinery of BotBase.
 
 ## Available methods
@@ -16,10 +16,6 @@ file as this would otherwise break the whole internal machinery of BotBase.
 The module `BotBase.database.query` implements the following default methods
 to interact with the database. All methods either return the result of a query
 or `True` if the operation was successful or an exception if the query errored.
-
-Please note that the methods are **NOT** locked and that proper locking is
-needed if you think that your bot might get a `sqlite3.OoerationalError: database
-is locked` error when accessing the database.
 
 All queries are performed within a `with` block and therefore rollbacked
 automatically if an error occurs or committed if the transaction was successful.
@@ -42,7 +38,7 @@ to the database. The username parameter can be `None`
 
 - `update_user` -> Updates a user's username with the given ID
 
-# I need MySQL/other DBMS!
+# I need Sqlite/other DBMS!
 
 The API has been designed in a way that makes it easy to swap between different
 database managers, so if you feel in the right mood make a PR to support a new
@@ -53,7 +49,7 @@ database, and it'll be reviewed ASAP.
 
 If you want to add custom methods to the API, we advise to follow the bot's convention:
 
-- Set the SQL query as a global variable whose name starts with `DB_` in `config.py`
+- Set the SQL query as a global variable whose name starts with `DB_` in `raw_queries.py`
 - Import it in the `BotBase.database.query` module
 - Create a new function that takes the required parameters whose name reflects the query name (without `DB_`)
 - Perform the query in a `with` context manager, close the cursor when you're done

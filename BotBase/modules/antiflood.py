@@ -1,5 +1,5 @@
 """
-Copyright 2020 Nocturn9x, alsoGAMER, CrisMystik
+Copyright 2020-2021 Nocturn9x, alsoGAMER, CrisMystik
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,15 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from collections import defaultdict
 import logging
 import time
+from collections import defaultdict
 
 from pyrogram import Client, filters
 
-from BotBase.config import ADMINS, ANTIFLOOD_SENSIBILITY, BAN_TIME, BYPASS_FLOOD, CACHE, DELETE_MESSAGES, ERROR, \
-    FLOOD_CLEARED, FLOOD_NOTICE, FLOOD_PERCENTAGE, FLOOD_USER_CLEARED, MAX_UPDATE_THRESHOLD, NON_NUMERIC_ID, \
-    PRIVATE_ONLY, bot, user_banned
+from BotBase.config import ADMINS, ANTIFLOOD_SENSIBILITY, BAN_TIME, BYPASS_FLOOD, CACHE, DELETE_MESSAGES, \
+    FLOOD_PERCENTAGE, MAX_UPDATE_THRESHOLD, PRIVATE_ONLY, bot
+from BotBase.strings.default_strings import ERROR, FLOOD_CLEARED, FLOOD_NOTICE, FLOOD_USER_CLEARED, NON_NUMERIC_ID
+from BotBase.methods.custom_filters import user_banned
 from BotBase.methods import MethodWrapper
 
 # Some variables for runtime configuration
