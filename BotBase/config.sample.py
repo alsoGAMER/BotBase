@@ -46,7 +46,7 @@ CACHE = defaultdict(lambda: ["none", 0])
 # Global cache. DO NOT TOUCH IT, really just don't
 VERSION = ""
 RELEASE_DATE = ""
-CREDITS = "‍💻 <b>Bot developed by</b> @yourusernamehere in <b>Python3.9</b> and <b>BotBase 2.1.0</b>" \
+CREDITS = "‍💻 <b>Bot developed by</b> @yourusernamehere in <b>Python3.9</b> and <b>BotBase 2.1.1</b>" \
           f"\n⚙️ <b>Version</b>: <code>{VERSION}</code>\n🗓 <b>Release Date</b>: <code>{RELEASE_DATE}</code>"
 # These will be shown in the 'Credits' section
 # endregion

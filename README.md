@@ -2,12 +2,16 @@
 
 BotBase is a collection of plugins that use [Pyrogram's](https://github.com/pyrogram/pyrogram) API to make Telegram bot development extremely easy.
 
+## News
+
+A test instance of BotBase is available [here](https://t.me/BotBaseTest_Bot)! <br />
+Please note that the antiflood is enabled and nobody will probably unban somebody that tried to take offline a test bot. <br />
+Note also that the uptime of this Bot is not guaranteed at all, after all, it's only a showcase bot.
+
 ### Disclaimer
 
-BotBase requires a solid knowledge of pyrogram and of the Telegram MTProto API itself, you can check pyrogram's docs [here](https://docs.pyrogram.org)
-
-The author of this project assumes that the reader is not completely computer illiterate, this project is thought for smart people that want to develop better bots faster, it is **not** a beginner's friendly framework.
-
+BotBase requires a solid knowledge of pyrogram and of the Telegram MTProto API itself, you can check pyrogram's docs [here](https://docs.pyrogram.org) <br />
+The author of this project assumes that the reader is not completely computer illiterate, this project is thought for smart people that want to develop better bots faster, it is **not** a beginner's friendly framework. <br />
 Also, you need to know how to host a bot yourself. I mean, I coded all of this for you already, make some effort!
 
 ## BotBase - Setup
