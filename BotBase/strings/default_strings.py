@@ -20,7 +20,7 @@ from BotBase.config import BAN_TIME
 FLOOD_NOTICE = f"🤙 <b>Hey buddy!</b>\n🕐 Relax! You have been banned for {BAN_TIME / 60:.1f} minutes"
 # If you want the user to be notified of being flood-blocked, set this to the desired message, False to disable
 FLOOD_CLEARED = "♻️ Antiflood table cleaned up"
-FLOOD_USER_CLEARED = "♻️ Antiflood table for<code>{user}</code> cleaned up"
+FLOOD_USER_CLEARED = "♻️ Antiflood table for <code>{user}</code> cleaned up"
 TOO_FAST = "✋ Calm down! Try again later"
 # endregion
 
